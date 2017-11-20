@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import com.bluelinelabs.conductor.Router
 import com.couchbase.lite.Database
 import com.couchbase.lite.DatabaseConfiguration
+import io.ipoli.android.achieve.PlanDayPresenter
 import io.ipoli.android.common.navigation.Navigator
 import io.ipoli.android.common.text.CalendarFormatter
 import io.ipoli.android.home.HomePresenter
@@ -170,6 +171,7 @@ interface PresenterModule {
     val dayViewPresenter: DayViewPresenter
     val reminderPickerPresenter: ReminderPickerDialogPresenter
     val addQuestPresenter: AddQuestPresenter
+    val planDayPresenter: PlanDayPresenter
 }
 
 class AndroidPresenterModule : PresenterModule, Injects<ControllerModule> {
@@ -190,6 +192,7 @@ class AndroidPresenterModule : PresenterModule, Injects<ControllerModule> {
     override val reminderPickerPresenter get() = ReminderPickerDialogPresenter(reminderTimeFormatter, timeUnitFormatter, job)
     override val calendarPresenter get() = CalendarPresenter(calendarFormatter, job)
     override val addQuestPresenter get() = AddQuestPresenter(saveQuestUseCase, job)
+    override val planDayPresenter get() = PlanDayPresenter(job)
 }
 
 class ControllerModule(androidModule: AndroidModule,
