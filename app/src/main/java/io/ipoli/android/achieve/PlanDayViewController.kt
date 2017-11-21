@@ -6,6 +6,8 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.bumptech.glide.Glide
+import com.bumptech.glide.load.engine.DiskCacheStrategy
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.bumptech.glide.request.RequestOptions
 import com.bumptech.glide.request.target.SimpleTarget
 import com.bumptech.glide.request.transition.Transition
@@ -53,11 +55,13 @@ class PlanDayViewController(args: Bundle? = null) :
     override fun render(state: PlanDayViewState, view: View) {
         if (state.type == PlanDayViewState.StateType.DATA_LOADED) {
 
-            val options = RequestOptions().override(1080, 1920)
+            val options = RequestOptions().override(1080, 1920).useAnimationPool(true).diskCacheStrategy(DiskCacheStrategy.ALL)
 
             Glide.with(view.context)
                 .load(state.backgroundImageUrl)
                 .apply(options)
+
+                .transition(DrawableTransitionOptions.withCrossFade())
                 .into(object : SimpleTarget<Drawable>() {
                     override fun onResourceReady(resource: Drawable?, transition: Transition<in Drawable>?) {
                         view.background = resource
