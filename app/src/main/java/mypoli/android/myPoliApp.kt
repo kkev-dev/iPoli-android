@@ -5,8 +5,11 @@ import android.app.Application
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.content.ContentUris
 import android.content.Context
 import android.os.Build
+import android.provider.CalendarContract
+import android.provider.CalendarContract.Instances
 import android.util.Log
 import com.crashlytics.android.Crashlytics
 import com.evernote.android.job.JobManager
@@ -18,8 +21,11 @@ import com.squareup.leakcanary.RefWatcher
 import io.fabric.sdk.android.Fabric
 import mypoli.android.common.di.*
 import mypoli.android.common.job.myPoliJobCreator
+import org.threeten.bp.Instant
+import org.threeten.bp.ZoneId
 import space.traversal.kapsule.transitive
 import timber.log.Timber
+import java.util.*
 
 
 /**
@@ -40,6 +46,29 @@ class myPoliApp : Application() {
             (context.applicationContext as myPoliApp).module
     }
 
+    val INSTANCE_PROJECTION = arrayOf(
+        Instances.EVENT_ID, // 0
+        Instances.BEGIN, // 1
+        Instances.END, // 1
+        Instances.START_MINUTE, // 1
+        Instances.END_MINUTE, // 1
+        Instances.TITLE,          // 2
+        Instances.EVENT_LOCATION,
+        Instances.DURATION,
+        Instances.CALENDAR_TIME_ZONE
+    )
+
+    // The indices for the projection array above.
+    private val PROJECTION_ID_INDEX = 0
+    private val PROJECTION_BEGIN_INDEX = 1
+    private val PROJECTION_END_INDEX = 2
+    private val PROJECTION_START_MIN_INDEX = 3
+    private val PROJECTION_END_MIN_INDEX = 4
+    private val PROJECTION_TITLE_INDEX = 5
+    private val PROJECTION_LOCATION_INDEX = 6
+    private val PROJECTION_DURATION_INDEX = 7
+    private val PROJECTION_TIME_ZONE_INDEX = 8
+
     @SuppressLint("NewApi")
     override fun onCreate() {
         super.onCreate()
@@ -51,13 +80,58 @@ class myPoliApp : Application() {
             return
         }
 
-
         AndroidThreeTen.init(this)
         // Initialize Realm. Should only be done once when the application starts.
 //        Realm.init(this)
 //        val db = Database()
         Timber.plant(Timber.DebugTree())
 
+
+//        val p = CalendarProvider(this)
+//        val c = p.getCalendar(3)
+
+        val beginTime = Calendar.getInstance()
+        beginTime.set(2018, 1, 2, 0, 0, 0)
+
+        val endTime = Calendar.getInstance()
+        endTime.set(2018, 1, 2, 23, 59, 59)
+
+        val cr = contentResolver
+
+        val builder = Instances.CONTENT_URI.buildUpon()
+        ContentUris.appendId(builder, beginTime.timeInMillis)
+        ContentUris.appendId(builder, endTime.timeInMillis)
+
+        val selection = (CalendarContract.Events.CALENDAR_ID + " = ?")
+        val selectionArgs = arrayOf("3")
+
+        val cur = cr.query(
+            builder.build(),
+            INSTANCE_PROJECTION,
+            selection,
+            selectionArgs,
+            null
+        )
+
+        while (cur.moveToNext()) {
+            val eventID = cur.getLong(PROJECTION_ID_INDEX);
+            val beginVal = cur.getLong(PROJECTION_BEGIN_INDEX);
+            val endVal = cur.getLong(PROJECTION_END_INDEX);
+            val startMin = cur.getLong(PROJECTION_START_MIN_INDEX);
+            val endMin = cur.getLong(PROJECTION_END_MIN_INDEX);
+            val title = cur.getString(PROJECTION_TITLE_INDEX)
+            val loc = cur.getString(PROJECTION_LOCATION_INDEX)
+            val dur = cur.getString(PROJECTION_DURATION_INDEX)
+            val tz = cur.getString(PROJECTION_TIME_ZONE_INDEX)
+            Timber.d("AAA $eventID ${Instant.ofEpochMilli(beginVal).atZone(ZoneId.of(tz))} $endVal $startMin $endMin $title $loc $dur $tz")
+        }
+
+        cur.close()
+
+//        val instances = p.getInstances(beginTime.timeInMillis, endTime.timeInMillis).list
+//        Timber.d("AAA ${instances.size}")
+//        val i = instances.first()
+//        Timber.d("AAA $i")
 
 //        Logger.addLogAdapter(AndroidLogAdapter())
 
