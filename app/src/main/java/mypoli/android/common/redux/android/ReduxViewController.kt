@@ -8,6 +8,8 @@ import com.bluelinelabs.conductor.RestoreViewOnCreateController
 import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.AppState
+import mypoli.android.common.UIAction
+import mypoli.android.common.UIReducer
 import mypoli.android.common.di.Module
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
@@ -21,7 +23,7 @@ import space.traversal.kapsule.required
  * Created by Venelin Valkov <venelin@mypoli.fun>
  * on 1/18/18.
  */
-abstract class ReduxViewController<in A : Action, VS : ViewState, out P : AndroidStatePresenter<AppState, VS>> protected constructor(
+abstract class ReduxViewController<in A : Action, VS : ViewState, out R : UIReducer<VS>> protected constructor(
     args: Bundle? = null
 ) :
     RestoreViewOnCreateController(args), Injects<Module>,
@@ -29,7 +31,9 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out P : Androi
 
     private val stateStore by required { stateStore }
 
-    protected abstract val presenter: P
+//    protected abstract val presenter: P
+
+    protected abstract val reducer: R
 
     override fun onContextAvailable(context: Context) {
         inject(myPoliApp.module(context))
@@ -39,25 +43,27 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out P : Androi
         val lifecycleListener = object : LifecycleListener() {
 
             override fun postAttach(controller: Controller, view: View) {
+                stateStore.dispatch(UIAction.Attach(reducer))
                 stateStore.subscribe(this@ReduxViewController)
             }
 
             override fun preDetach(controller: Controller, view: View) {
+                stateStore.dispatch(UIAction.Detach(reducer))
                 stateStore.unsubscribe(this@ReduxViewController)
             }
         }
         addLifecycleListener(lifecycleListener)
     }
 
-    override val transformer: StateStore.StateChangeSubscriber.StateTransformer<AppState, VS>
-        get() = object : StateStore.StateChangeSubscriber.StateTransformer<AppState, VS> {
-
-            override fun transformInitial(state: AppState): VS =
-                presenter.presentInitial(presenter.present(state, activity!!))
-
-            override fun transform(state: AppState): VS =
-                presenter.present(state, activity!!)
-        }
+//    override val transformer: StateStore.StateChangeSubscriber.StateTransformer<AppState, VS>
+//        get() = object : StateStore.StateChangeSubscriber.StateTransformer<AppState, VS> {
+//
+//            override fun transformInitial(state: AppState): VS =
+//                presenter.presentInitial(presenter.present(state, activity!!))
+//
+//            override fun transform(state: AppState): VS =
+//                presenter.present(state, activity!!)
+//        }
 
     fun dispatch(action: A) {
         stateStore.dispatch(action)

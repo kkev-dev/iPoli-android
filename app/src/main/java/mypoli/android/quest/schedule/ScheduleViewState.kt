@@ -1,13 +1,10 @@
 package mypoli.android.quest.schedule
 
 import mypoli.android.common.AppState
-import mypoli.android.common.AppStateReducer
 import mypoli.android.common.DataLoadedAction
+import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.State
-import mypoli.android.quest.schedule.ScheduleState.ViewMode.AGENDA
-import mypoli.android.quest.schedule.ScheduleState.ViewMode.CALENDAR
 import mypoli.android.quest.schedule.agenda.AgendaAction
 import mypoli.android.quest.schedule.calendar.CalendarAction
 import org.threeten.bp.LocalDate
@@ -28,34 +25,18 @@ sealed class ScheduleAction : Action {
     object ToggleViewMode : ScheduleAction()
 }
 
-
-data class ScheduleState(
-    val type: StateType,
-    val currentDate: LocalDate,
-    val currentMonth: YearMonth,
-    val datePickerState: ScheduleViewState.DatePickerState,
-    val viewMode: ViewMode,
-    val progress: Int,
-    val maxProgress: Int,
-    val level: Int,
-    val coins: Int
-) : State {
-    enum class StateType {
-        LOADING, IDLE,
-        INITIAL, CALENDAR_DATE_CHANGED, SWIPE_DATE_CHANGED, DATE_PICKER_CHANGED, MONTH_CHANGED,
-        LEVEL_CHANGED, XP_AND_COINS_CHANGED, DATA_CHANGED,
-        VIEW_MODE_CHANGED, DATE_AUTO_CHANGED
-    }
-
-    enum class ViewMode {
-        CALENDAR, AGENDA
-    }
-}
-
-object ScheduleReducer : AppStateReducer<ScheduleState> {
+object ScheduleReducer : UIReducer<ScheduleViewState> {
+    override fun defaultState() =
+        ScheduleViewState(
+            ScheduleViewState.StateType.LOADING,
+            YearMonth.now(),
+            LocalDate.now(),
+            viewMode = ScheduleViewState.ViewMode.CALENDAR,
+            datePickerState = ScheduleViewState.DatePickerState.INVISIBLE
+        )
 
     override fun reduce(state: AppState, action: Action) =
-        state.scheduleState.let {
+        (state.uiState["state_key"] as ScheduleViewState).let {
             when (action) {
                 is DataLoadedAction.PlayerChanged -> reducePlayerChanged(
                     it,
@@ -75,7 +56,7 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
                         curDate.plusDays(1)
 
                     it.copy(
-                        type = ScheduleState.StateType.SWIPE_DATE_CHANGED,
+                        type = ScheduleViewState.StateType.SWIPE_DATE_CHANGED,
                         currentDate = newDate
                     )
                 }
@@ -86,11 +67,11 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
 
                     if (it.currentDate.isEqual(startDate)) {
                         it.copy(
-                            type = ScheduleState.StateType.IDLE
+                            type = ScheduleViewState.StateType.IDLE
                         )
                     } else {
                         it.copy(
-                            type = ScheduleState.StateType.DATE_AUTO_CHANGED,
+                            type = ScheduleViewState.StateType.DATE_AUTO_CHANGED,
                             currentDate = startDate,
                             currentMonth = YearMonth.of(startDate.year, startDate.month)
                         )
@@ -102,14 +83,14 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
         }
 
     private fun reducePlayerChanged(
-        state: ScheduleState,
+        state: ScheduleViewState,
         action: DataLoadedAction.PlayerChanged
-    ): ScheduleState {
+    ): ScheduleViewState {
         val player = action.player
         val type = when {
-            state.level == 0 -> ScheduleState.StateType.DATA_CHANGED
-            state.level != player.level -> ScheduleState.StateType.LEVEL_CHANGED
-            else -> ScheduleState.StateType.XP_AND_COINS_CHANGED
+            state.level == 0 -> ScheduleViewState.StateType.DATA_CHANGED
+            state.level != player.level -> ScheduleViewState.StateType.LEVEL_CHANGED
+            else -> ScheduleViewState.StateType.XP_AND_COINS_CHANGED
         }
         return state.copy(
             type = type,
@@ -120,16 +101,16 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
         )
     }
 
-    private fun reduceCalendarAction(state: ScheduleState, action: ScheduleAction) =
+    private fun reduceCalendarAction(state: ScheduleViewState, action: ScheduleAction) =
         when (action) {
             ScheduleAction.ExpandWeekToolbar -> {
                 when (state.datePickerState) {
                     ScheduleViewState.DatePickerState.SHOW_WEEK -> state.copy(
-                        type = ScheduleState.StateType.DATE_PICKER_CHANGED,
+                        type = ScheduleViewState.StateType.DATE_PICKER_CHANGED,
                         datePickerState = ScheduleViewState.DatePickerState.SHOW_MONTH
                     )
                     else -> state.copy(
-                        type = ScheduleState.StateType.DATE_PICKER_CHANGED,
+                        type = ScheduleViewState.StateType.DATE_PICKER_CHANGED,
                         datePickerState = ScheduleViewState.DatePickerState.SHOW_WEEK
                     )
                 }
@@ -138,11 +119,11 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
             ScheduleAction.ExpandToolbar -> {
                 when (state.datePickerState) {
                     ScheduleViewState.DatePickerState.INVISIBLE -> state.copy(
-                        type = ScheduleState.StateType.DATE_PICKER_CHANGED,
+                        type = ScheduleViewState.StateType.DATE_PICKER_CHANGED,
                         datePickerState = ScheduleViewState.DatePickerState.SHOW_WEEK
                     )
                     else -> state.copy(
-                        type = ScheduleState.StateType.DATE_PICKER_CHANGED,
+                        type = ScheduleViewState.StateType.DATE_PICKER_CHANGED,
                         datePickerState = ScheduleViewState.DatePickerState.INVISIBLE
                     )
                 }
@@ -150,7 +131,7 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
 
             is ScheduleAction.ScheduleChangeDate -> {
                 state.copy(
-                    type = ScheduleState.StateType.CALENDAR_DATE_CHANGED,
+                    type = ScheduleViewState.StateType.CALENDAR_DATE_CHANGED,
                     currentDate = LocalDate.of(action.year, action.month, action.day),
                     currentMonth = YearMonth.of(action.year, action.month)
                 )
@@ -158,36 +139,23 @@ object ScheduleReducer : AppStateReducer<ScheduleState> {
 
             is ScheduleAction.ChangeMonth -> {
                 state.copy(
-                    type = ScheduleState.StateType.MONTH_CHANGED,
+                    type = ScheduleViewState.StateType.MONTH_CHANGED,
                     currentMonth = YearMonth.of(action.year, action.month)
                 )
             }
 
             is ScheduleAction.ToggleViewMode -> {
                 state.copy(
-                    type = ScheduleState.StateType.VIEW_MODE_CHANGED,
-                    viewMode = if (state.viewMode == CALENDAR) AGENDA else CALENDAR
+                    type = ScheduleViewState.StateType.VIEW_MODE_CHANGED,
+                    viewMode = if (state.viewMode == ScheduleViewState.ViewMode.CALENDAR) ScheduleViewState.ViewMode.AGENDA else ScheduleViewState.ViewMode.CALENDAR
                 )
             }
         }
-
-
-    override fun defaultState() =
-        ScheduleState(
-            type = ScheduleState.StateType.INITIAL,
-            currentDate = LocalDate.now(),
-            currentMonth = YearMonth.now(),
-            datePickerState = ScheduleViewState.DatePickerState.INVISIBLE,
-            progress = 0,
-            maxProgress = 0,
-            level = 0,
-            coins = 0,
-            viewMode = CALENDAR
-        )
 }
 
 data class ScheduleViewState(
-    val type: ScheduleState.StateType,
+    val type: StateType,
+    val currentMonth: YearMonth,
     val currentDate: LocalDate,
     val monthText: String = "",
     val dayText: String = "",
@@ -197,10 +165,21 @@ data class ScheduleViewState(
     val maxProgress: Int = 0,
     val level: Int = 0,
     val coins: Int = 0,
-    val viewMode: ScheduleState.ViewMode,
-    val viewModeIcon: Int,
-    val viewModeTitle: String
+    val viewMode: ViewMode
+//    val viewModeIcon: Int,
+//    val viewModeTitle: String
 ) : ViewState {
+
+    enum class StateType {
+        LOADING, IDLE,
+        INITIAL, CALENDAR_DATE_CHANGED, SWIPE_DATE_CHANGED, DATE_PICKER_CHANGED, MONTH_CHANGED,
+        LEVEL_CHANGED, XP_AND_COINS_CHANGED, DATA_CHANGED,
+        VIEW_MODE_CHANGED, DATE_AUTO_CHANGED
+    }
+
+    enum class ViewMode {
+        CALENDAR, AGENDA
+    }
 
     enum class DatePickerState {
         INVISIBLE, SHOW_WEEK, SHOW_MONTH

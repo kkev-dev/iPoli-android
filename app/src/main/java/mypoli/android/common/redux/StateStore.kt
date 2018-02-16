@@ -1,7 +1,7 @@
 package mypoli.android.common.redux
 
-import android.support.annotation.MainThread
 import mypoli.android.common.redux.MiddleWare.Result.Continue
+import java.util.concurrent.CopyOnWriteArrayList
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>
@@ -10,62 +10,59 @@ import mypoli.android.common.redux.MiddleWare.Result.Continue
 
 interface Action
 
-interface SideEffect<in S : State> {
+interface SideEffect<S : State<S>> {
 
     suspend fun execute(action: Action, state: S, dispatcher: Dispatcher)
 
     fun canHandle(action: Action): Boolean
 }
 
-interface State
+abstract class State<T>(
+    private val stateData: Map<Class<Any>, Any>
+) where T : State<T> {
 
-interface Reducer<in I : State, out O : State> {
+    fun <S> stateFor(key: Class<S>): S {
 
-    fun reduce(state: I, action: Action): O
+        require(stateData.containsKey(key as Class<Any>))
 
-    fun defaultState(): O
+        val data = stateData[key]
+
+        return data as S
+    }
+
+    fun <S> update(stateKey: Class<S>, newState: S) =
+        createWithData(stateData.plus(Pair(stateKey as Class<Any>, newState as Any)))
+
+    val keys = stateData.keys
+
+    abstract fun createWithData(stateData: Map<Class<Any>, Any>): T
+}
+
+interface Reducer<S : State<S>> {
+
+    fun reduce(state: S, action: Action): S
+
+    fun defaultState(): S
+
+    val key: Class<S>
 }
 
 interface Dispatcher {
     fun <A : Action> dispatch(action: A)
 }
 
-class StateStore<out S : State>(
-    private val reducer: Reducer<S, S>,
+class StateStore<S : State<S>>(
+    private val reducer: Reducer<S>,
     middleware: List<MiddleWare<S>> = listOf()
 ) : Dispatcher {
 
-    interface StateChangeSubscriber<in S, T> {
+    interface StateChangeSubscriber<in S> {
 
-        interface StateTransformer<in S, out T> {
-
-            fun transformInitial(state: S): T {
-                return transform(state)
-            }
-
-            fun transform(state: S): T
-        }
-
-        val transformer: StateTransformer<S, T>
-
-        fun changeState(oldState: S, newState: S) {
-            val old = transformer.transform(oldState)
-            val new = transformer.transform(newState)
-            if (old != new) onStateChanged(new)
-        }
-
-        @MainThread
-        fun onStateChanged(newState: T)
+        fun onStateChanged(newState: S)
     }
 
-    interface SimpleStateChangeSubscriber<S> : StateChangeSubscriber<S, S> {
-        override val transformer
-            get() = object : StateChangeSubscriber.StateTransformer<S, S> {
-                override fun transform(state: S) = state
-            }
-    }
-
-    private var stateChangeSubscribers: List<StateChangeSubscriber<S, *>> = listOf()
+    private var stateChangeSubscribers: CopyOnWriteArrayList<StateChangeSubscriber<S>> =
+        CopyOnWriteArrayList()
     private var state = reducer.defaultState()
     private val middleWare = CompositeMiddleware<S>(middleware)
 
@@ -76,23 +73,22 @@ class StateStore<out S : State>(
 
     private fun changeState(action: Action) {
         val newState = reducer.reduce(state, action)
-        val oldState = state
         state = newState
-        notifyStateChanged(oldState, newState)
+        notifyStateChanged(newState)
     }
 
-    private fun notifyStateChanged(oldState: S, newState: S) {
+    private fun notifyStateChanged(newState: S) {
         stateChangeSubscribers.forEach {
-            it.changeState(oldState, newState)
+            it.onStateChanged(newState)
         }
     }
 
-    fun <T> subscribe(subscriber: StateChangeSubscriber<S, T>) {
-        stateChangeSubscribers += subscriber
-        subscriber.onStateChanged(subscriber.transformer.transformInitial(state))
+    fun <T> subscribe(subscriber: StateChangeSubscriber<S>) {
+        stateChangeSubscribers.add(subscriber)
+        subscriber.onStateChanged(state)
     }
 
-    fun <T> unsubscribe(subscriber: StateChangeSubscriber<S, T>) {
-        stateChangeSubscribers -= subscriber
+    fun <T> unsubscribe(subscriber: StateChangeSubscriber<S>) {
+        stateChangeSubscribers.remove(subscriber)
     }
 }

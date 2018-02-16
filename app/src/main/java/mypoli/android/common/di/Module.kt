@@ -500,7 +500,7 @@ class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
 
     override val stateStore by required {
         StateStore(
-            AppReducer,
+            CombinedReducer,
             listOf(
                 SagaMiddleware<AppState>(
                     sideEffects = listOf(
