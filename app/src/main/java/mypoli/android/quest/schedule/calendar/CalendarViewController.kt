@@ -14,7 +14,6 @@ import kotlinx.android.synthetic.main.controller_calendar.view.*
 import mypoli.android.R
 import mypoli.android.common.redux.android.ReduxViewController
 import mypoli.android.quest.schedule.ScheduleViewController
-import mypoli.android.quest.schedule.calendar.CalendarState.StateType.*
 import mypoli.android.quest.schedule.calendar.dayview.view.DayViewController
 import org.threeten.bp.LocalDate
 
@@ -23,9 +22,9 @@ import org.threeten.bp.LocalDate
  * on 01/31/2018.
  */
 class CalendarViewController(args: Bundle? = null) :
-    ReduxViewController<CalendarAction, CalendarViewState, CalendarPresenter>(args) {
+    ReduxViewController<CalendarAction, CalendarViewState, CalendarReducer>(args) {
 
-    override val presenter get() = CalendarPresenter()
+    override val reducer = CalendarReducer
 
     private var dayViewPagerAdapter: DayViewPagerAdapter? = null
 
@@ -49,17 +48,17 @@ class CalendarViewController(args: Bundle? = null) :
     override fun render(state: CalendarViewState, view: View) {
 
         when (state.type) {
-            INITIAL -> {
+            CalendarViewState.StateType.INITIAL -> {
                 removeDayViewPagerAdapter(view)
                 createDayViewPagerAdapter(state, view)
             }
 
-            CALENDAR_DATE_CHANGED -> {
+            CalendarViewState.StateType.CALENDAR_DATE_CHANGED -> {
                 removeDayViewPagerAdapter(view)
                 createDayViewPagerAdapter(state, view)
             }
 
-            SWIPE_DATE_CHANGED -> {
+            CalendarViewState.StateType.SWIPE_DATE_CHANGED -> {
                 updateDayViewPagerAdapter(state)
             }
         }

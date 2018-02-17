@@ -1,16 +1,19 @@
 package mypoli.android.quest.schedule
 
+import android.content.Context
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
 import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
+import mypoli.android.common.text.CalendarFormatter
 import mypoli.android.quest.schedule.agenda.AgendaAction
 import mypoli.android.quest.schedule.agenda.AgendaViewState
 import mypoli.android.quest.schedule.calendar.CalendarAction
 import org.threeten.bp.LocalDate
 import org.threeten.bp.YearMonth
+import org.threeten.bp.format.DateTimeFormatter
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>
@@ -27,7 +30,7 @@ sealed class ScheduleAction : Action {
     object ToggleViewMode : ScheduleAction()
 }
 
-object ScheduleReducer : UIReducer<ScheduleViewState> {
+object ScheduleReducer : UIReducer<AppState, ScheduleViewState> {
     override val key = ScheduleViewState::class.java
 
     override fun defaultState() =
@@ -162,9 +165,6 @@ data class ScheduleViewState(
     val type: StateType,
     val currentMonth: YearMonth,
     val currentDate: LocalDate,
-    val monthText: String = "",
-    val dayText: String = "",
-    val dateText: String = "",
     val datePickerState: DatePickerState,
     val progress: Int = 0,
     val maxProgress: Int = 0,
@@ -199,3 +199,12 @@ val ScheduleViewState.viewModeIcon
 
 val ScheduleViewState.viewModeTitle
     get() = if (viewMode == ScheduleViewState.ViewMode.CALENDAR) "Agenda" else "Calendar"
+
+fun ScheduleViewState.dayText(context: Context) =
+    CalendarFormatter(context).day(currentDate)
+
+fun ScheduleViewState.dateText(context: Context) =
+    CalendarFormatter(context).date(currentDate)
+
+val ScheduleViewState.monthText: String
+    get() = DateTimeFormatter.ofPattern("MMMM").format(currentMonth)

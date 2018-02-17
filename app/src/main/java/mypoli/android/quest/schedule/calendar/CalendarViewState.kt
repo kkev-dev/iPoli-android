@@ -1,11 +1,11 @@
 package mypoli.android.quest.schedule.calendar
 
 import mypoli.android.common.AppState
-import mypoli.android.common.AppStateReducer
+import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.State
 import mypoli.android.quest.schedule.ScheduleAction
+import mypoli.android.quest.schedule.ScheduleViewState
 import org.threeten.bp.LocalDate
 
 /**
@@ -13,40 +13,36 @@ import org.threeten.bp.LocalDate
  * on 01/31/2018.
  */
 
+object CalendarReducer : UIReducer<AppState, CalendarViewState> {
+    override val key: Class<CalendarViewState>
+        get() = CalendarViewState::class.java
 
-data class CalendarState(
-    val type: StateType,
-    val adapterPosition: Int,
-    val adapterMidPosition: Int
-) : State {
-    enum class StateType {
-        INITIAL, CALENDAR_DATE_CHANGED, SWIPE_DATE_CHANGED
-    }
-}
+    override fun reduce(state: AppState, action: Action): CalendarViewState {
 
-object CalendarReducer : AppStateReducer<CalendarState> {
-    override fun reduce(state: AppState, action: Action): CalendarState {
+        val calendarState = state.stateFor(key)
+            .copy(currentDate = state.stateFor(ScheduleViewState::class.java).currentDate)
 
         return when (action) {
             is CalendarAction.SwipeChangeDate -> {
-                state.calendarState.copy(
-                    type = CalendarState.StateType.SWIPE_DATE_CHANGED,
+                calendarState.copy(
+                    type = CalendarViewState.StateType.SWIPE_DATE_CHANGED,
                     adapterPosition = action.adapterPosition
                 )
             }
             is ScheduleAction.ScheduleChangeDate -> {
-                state.calendarState.copy(
-                    type = CalendarState.StateType.CALENDAR_DATE_CHANGED,
+                calendarState.copy(
+                    type = CalendarViewState.StateType.CALENDAR_DATE_CHANGED,
                     adapterPosition = MID_POSITION
                 )
             }
-            else -> state.calendarState
+            else -> calendarState
         }
     }
 
-    override fun defaultState(): CalendarState {
-        return CalendarState(
-            type = CalendarState.StateType.INITIAL,
+    override fun defaultState(): CalendarViewState {
+        return CalendarViewState(
+            type = CalendarViewState.StateType.INITIAL,
+            currentDate = LocalDate.now(),
             adapterPosition = MID_POSITION,
             adapterMidPosition = MID_POSITION
         )
@@ -60,7 +56,12 @@ sealed class CalendarAction : Action {
 }
 
 data class CalendarViewState(
-    val type: CalendarState.StateType,
+    val type: CalendarViewState.StateType,
     val currentDate: LocalDate,
-    val adapterPosition: Int
-) : ViewState
+    val adapterPosition: Int,
+    val adapterMidPosition: Int
+) : ViewState {
+    enum class StateType {
+        INITIAL, CALENDAR_DATE_CHANGED, SWIPE_DATE_CHANGED
+    }
+}

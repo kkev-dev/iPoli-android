@@ -257,8 +257,8 @@ class ScheduleViewController(args: Bundle? = null) :
 
         val levelProgress = view.levelProgress
 
-        calendarToolbar.day.text = state.dayText
-        calendarToolbar.date.text = state.dateText
+        calendarToolbar.day.text = state.dayText(activity!!)
+        calendarToolbar.date.text = state.dateText(activity!!)
         view.currentMonth.text = state.monthText
 
         view.addQuest.setOnClickListener {
