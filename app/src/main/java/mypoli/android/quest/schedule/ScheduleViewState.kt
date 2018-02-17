@@ -1,11 +1,13 @@
 package mypoli.android.quest.schedule
 
+import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
 import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.quest.schedule.agenda.AgendaAction
+import mypoli.android.quest.schedule.agenda.AgendaViewState
 import mypoli.android.quest.schedule.calendar.CalendarAction
 import org.threeten.bp.LocalDate
 import org.threeten.bp.YearMonth
@@ -26,6 +28,8 @@ sealed class ScheduleAction : Action {
 }
 
 object ScheduleReducer : UIReducer<ScheduleViewState> {
+    override val key = ScheduleViewState::class.java
+
     override fun defaultState() =
         ScheduleViewState(
             ScheduleViewState.StateType.LOADING,
@@ -36,7 +40,7 @@ object ScheduleReducer : UIReducer<ScheduleViewState> {
         )
 
     override fun reduce(state: AppState, action: Action) =
-        (state.uiState["state_key"] as ScheduleViewState).let {
+        state.stateFor(ScheduleViewState::class.java).let {
             when (action) {
                 is DataLoadedAction.PlayerChanged -> reducePlayerChanged(
                     it,
@@ -63,7 +67,8 @@ object ScheduleReducer : UIReducer<ScheduleViewState> {
                 is AgendaAction.FirstVisibleItemChanged -> {
 
                     val itemPos = action.itemPosition
-                    val startDate = state.agendaState.agendaItems[itemPos].startDate()
+                    val startDate =
+                        state.stateFor(AgendaViewState::class.java).agendaItems[itemPos].startDate()
 
                     if (it.currentDate.isEqual(startDate)) {
                         it.copy(
@@ -185,3 +190,12 @@ data class ScheduleViewState(
         INVISIBLE, SHOW_WEEK, SHOW_MONTH
     }
 }
+
+val ScheduleViewState.viewModeIcon
+    get() = if (viewMode == ScheduleViewState.ViewMode.CALENDAR)
+        R.drawable.ic_format_list_bulleted_white_24dp
+    else
+        R.drawable.ic_event_white_24dp
+
+val ScheduleViewState.viewModeTitle
+    get() = if (viewMode == ScheduleViewState.ViewMode.CALENDAR) "Agenda" else "Calendar"

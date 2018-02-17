@@ -9,6 +9,7 @@ import com.bluelinelabs.conductor.RestoreViewOnCreateController
 import kotlinx.coroutines.experimental.channels.SendChannel
 import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.di.Module
+import mypoli.android.common.redux.State
 import mypoli.android.myPoliApp
 import space.traversal.kapsule.Injects
 import space.traversal.kapsule.inject
@@ -17,7 +18,7 @@ import space.traversal.kapsule.inject
  * Created by Venelin Valkov <venelin@mypoli.fun>
  * on 9/8/17.
  */
-interface ViewState
+interface ViewState : State
 
 interface Intent
 
