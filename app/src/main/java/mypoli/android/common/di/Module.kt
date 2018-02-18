@@ -499,7 +499,8 @@ class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
 
     override val stateStore by required {
         StateStore(
-            setOf(
+            initialState = AppState(),
+            reducers = setOf(
                 AppDataReducer,
                 HomeReducer,
                 CalendarReducer,
@@ -510,16 +511,15 @@ class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
                 RepeatingQuestListReducer,
                 ChallengeListForCategoryReducer
             ),
-            AppState(),
-            CoroutineSideEffectExecutor(job + CommonPool),
-            effects = setOf(
+            sideEffects = setOf(
                 LoadAllDataSideEffect(),
                 AuthSideEffect(),
                 AgendaSideEffect(),
                 BuyPredefinedChallengeSideEffect(),
                 ChangePetSideEffect(),
                 BuyPetSideEffect()
-            )
+            ),
+            sideEffectExecutor = CoroutineSideEffectExecutor(job + CommonPool)
         )
     }
 }

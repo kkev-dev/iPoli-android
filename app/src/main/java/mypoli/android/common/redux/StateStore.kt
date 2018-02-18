@@ -4,7 +4,7 @@ import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.UIAction
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.MiddleWare.Result.Continue
-import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.CopyOnWriteArraySet
 import kotlin.coroutines.experimental.CoroutineContext
 
 /**
@@ -89,22 +89,26 @@ interface Dispatcher {
 }
 
 class StateStore<S : CombinedState<S>>(
-    private val reducers: Set<Reducer<S, *>>,
-    defaultState: S,
+    initialState: S,
+    reducers: Set<Reducer<S, *>>,
+    sideEffects: Set<SideEffect<S>> = setOf(),
     private val sideEffectExecutor: SideEffectExecutor<S>,
-    middleware: List<MiddleWare<S>> = listOf(),
-    effects: Set<SideEffect<S>> = setOf()
+    middleware: List<MiddleWare<S>> = listOf()
 ) : Dispatcher {
 
     interface StateChangeSubscriber<in S> {
         fun onStateChanged(newState: S)
     }
 
-    private val sideEffects: CopyOnWriteArrayList<SideEffect<S>> = CopyOnWriteArrayList(effects)
+    private val storeEffects: CopyOnWriteArraySet<SideEffect<S>> =
+        CopyOnWriteArraySet(sideEffects)
 
-    private var stateChangeSubscribers: CopyOnWriteArrayList<StateChangeSubscriber<S>> =
-        CopyOnWriteArrayList()
-    private var state = defaultState
+    private var stateChangeSubscribers: CopyOnWriteArraySet<StateChangeSubscriber<S>> =
+        CopyOnWriteArraySet()
+
+    private val storeReducers: CopyOnWriteArraySet<Reducer<S, *>> = CopyOnWriteArraySet(reducers)
+
+    private var state = initialState
     private val middleWare = CompositeMiddleware(middleware)
     private val reducer = CombinedReducer<S>()
 
@@ -114,14 +118,14 @@ class StateStore<S : CombinedState<S>>(
     }
 
     private fun changeState(action: Action) {
-        val newState = reducer.reduce(state, action, reducers)
+        val newState = reducer.reduce(state, action, storeReducers)
         state = newState
         notifyStateChanged(newState)
         executeSideEffects(action)
     }
 
     private fun executeSideEffects(action: Action) {
-        sideEffects
+        storeEffects
             .filter { it.canHandle(action) }
             .forEach {
                 sideEffectExecutor.execute(it, action, state, this)
@@ -151,14 +155,16 @@ class StateStore<S : CombinedState<S>>(
             val keyToReducer = reducers.map { it.key to it }.toMap()
 
             if (action is UIAction.Attach<*>) {
-                require(keyToReducer.contains(action.stateKey))
-                val reducer = keyToReducer[action.stateKey]!!
-                return state.update(action.stateKey, reducer.defaultState())
+                val stateKey = action.reducer.key
+                require(keyToReducer.contains(stateKey))
+                val reducer = keyToReducer[stateKey]!!
+                return state.update(stateKey, reducer.defaultState())
             }
 
             if (action is UIAction.Detach<*>) {
-                require(keyToReducer.contains(action.stateKey))
-                return state.remove(action.stateKey)
+                val stateKey = action.reducer.key
+                require(keyToReducer.contains(stateKey))
+                return state.remove(stateKey)
             }
 
             val newState = state.keys.map {

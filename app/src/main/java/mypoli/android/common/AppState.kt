@@ -3,6 +3,7 @@ package mypoli.android.common
 import mypoli.android.common.redux.Action
 import mypoli.android.common.redux.CombinedState
 import mypoli.android.common.redux.State
+import mypoli.android.common.redux.ViewStateReducer
 
 /**
  * Created by Venelin Valkov <venelin@ipoli.io>
@@ -15,9 +16,9 @@ sealed class LoadDataAction : Action {
 }
 
 sealed class UIAction : Action {
-    data class Attach<S : State>(val stateKey: Class<S>) : UIAction()
+    data class Attach<S : CombinedState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
 
-    data class Detach<S : State>(val stateKey: Class<S>) : UIAction()
+    data class Detach<S : CombinedState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
 }
 
 class AppState(

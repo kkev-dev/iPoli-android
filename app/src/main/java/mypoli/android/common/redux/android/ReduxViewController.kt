@@ -43,13 +43,13 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : ViewSt
         val lifecycleListener = object : LifecycleListener() {
 
             override fun postAttach(controller: Controller, view: View) {
-                stateStore.dispatch(UIAction.Attach(reducer.key))
+                stateStore.dispatch(UIAction.Attach(reducer))
                 stateStore.subscribe(this@ReduxViewController)
             }
 
             override fun preDetach(controller: Controller, view: View) {
                 stateStore.unsubscribe(this@ReduxViewController)
-                stateStore.dispatch(UIAction.Detach(reducer.key))
+                stateStore.dispatch(UIAction.Detach(reducer))
                 currentState = null
             }
         }
