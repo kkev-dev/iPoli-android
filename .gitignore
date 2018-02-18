@@ -14,6 +14,7 @@ app/google-services_prod.json
 app/google-services_dev.json
 *BillingConstants.kt
 *AnalyticsConstants.java
+*AnalyticsConstants.kt
 app/fabric.properties
 *ApiConstants.java
 secrets.tar
