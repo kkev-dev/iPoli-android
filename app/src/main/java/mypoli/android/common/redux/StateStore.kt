@@ -73,13 +73,13 @@ abstract class CompositeState<T>(
 interface Reducer<AS : CompositeState<AS>, S : State> {
 
     fun reduce(state: AS, action: Action) =
-        reduce(state, state.stateFor(key), action)
+        reduce(state, state.stateFor(stateKey), action)
 
     fun reduce(state: AS, subState: S, action: Action): S
 
     fun defaultState(): S
 
-    val key: Class<S>
+    val stateKey: Class<S>
 }
 
 interface ViewStateReducer<S : CompositeState<S>, VS : ViewState> : Reducer<S, VS>
@@ -100,12 +100,11 @@ class StateStore<S : CompositeState<S>>(
         fun onStateChanged(newState: S)
     }
 
-    private var stateChangeSubscribers: CopyOnWriteArraySet<StateChangeSubscriber<S>> =
-        CopyOnWriteArraySet()
-
     private var state = initialState
+
     private val middleWare = CompositeMiddleware(middleware)
     private val reducer = CompositeReducer(reducers)
+    private val stateChangeSubscribers = CopyOnWriteArraySet<StateChangeSubscriber<S>>()
 
     override fun <A : Action> dispatch(action: A) {
         val res = middleWare.execute(state, this, action)
@@ -145,19 +144,19 @@ class StateStore<S : CompositeState<S>>(
 
     class CompositeReducer<S : CompositeState<S>>(reducers: Set<Reducer<S, *>>) {
 
-        private val stateToReducer = reducers.map { it.key to it }.toMap()
+        private val stateToReducer = reducers.map { it.stateKey to it }.toMap()
 
         fun reduce(state: S, action: Action): S {
 
             if (action is UIAction.Attach<*>) {
-                val stateKey = action.reducer.key
+                val stateKey = action.reducer.stateKey
                 require(stateToReducer.contains(stateKey))
                 val reducer = stateToReducer[stateKey]!!
                 return state.update(stateKey, reducer.defaultState())
             }
 
             if (action is UIAction.Detach<*>) {
-                val stateKey = action.reducer.key
+                val stateKey = action.reducer.stateKey
                 require(stateToReducer.contains(stateKey))
                 return state.remove(stateKey)
             }

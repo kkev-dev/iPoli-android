@@ -3,10 +3,10 @@ package mypoli.android.quest.schedule
 import android.content.Context
 import mypoli.android.R
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.DataLoadedAction
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.common.text.CalendarFormatter
 import mypoli.android.quest.schedule.agenda.AgendaAction
 import mypoli.android.quest.schedule.agenda.AgendaViewState
@@ -31,8 +31,9 @@ sealed class ScheduleAction : Action {
     object ToggleViewMode : ScheduleAction()
 }
 
-object ScheduleReducer : ViewStateReducer<AppState, ScheduleViewState> {
-    override val key = ScheduleViewState::class.java
+object ScheduleReducer : BaseViewStateReducer<ScheduleViewState>() {
+
+    override val stateKey = key<ScheduleViewState>()
 
     override fun defaultState() =
         ScheduleViewState(

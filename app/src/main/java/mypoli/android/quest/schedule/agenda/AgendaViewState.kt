@@ -3,12 +3,12 @@ package mypoli.android.quest.schedule.agenda
 import com.mikepenz.ionicons_typeface_library.Ionicons
 import mypoli.android.R
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.DataLoadedAction
 import mypoli.android.common.datetime.isBetween
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.common.redux.State
-import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.common.text.DateFormatter
 import mypoli.android.common.view.AndroidColor
 import mypoli.android.common.view.AndroidIcon
@@ -48,9 +48,9 @@ data class AgendaState(
     }
 }
 
-object AgendaReducer : ViewStateReducer<AppState, AgendaViewState> {
+object AgendaReducer : BaseViewStateReducer<AgendaViewState>() {
 
-    override val key = AgendaViewState::class.java
+    override val stateKey = key<AgendaViewState>()
 
 
     override fun reduce(

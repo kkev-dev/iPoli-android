@@ -5,9 +5,9 @@ import com.google.firebase.auth.FirebaseUser
 import mypoli.android.Constants
 import mypoli.android.R
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.ViewStateReducer
 
 /**
  * Created by Polina Zhelyazkova <polina@ipoli.io>
@@ -30,8 +30,9 @@ sealed class AuthAction : Action {
     object GuestPlayerLoggedIn : AuthAction()
 }
 
-object AuthReducer : ViewStateReducer<AppState, AuthViewState> {
-    override val key = AuthViewState::class.java
+object AuthReducer : BaseViewStateReducer<AuthViewState>() {
+
+    override val stateKey = key<AuthViewState>()
 
     override fun reduce(state: AppState, subState: AuthViewState, action: Action) =
         when (action) {

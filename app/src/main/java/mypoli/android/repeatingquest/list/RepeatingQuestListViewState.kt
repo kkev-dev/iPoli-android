@@ -1,9 +1,9 @@
 package mypoli.android.repeatingquest.list
 
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.ViewStateReducer
 
 /**
  * Created by Polina Zhelyazkova <polina@ipoli.io>
@@ -12,7 +12,9 @@ import mypoli.android.common.redux.ViewStateReducer
 sealed class RepeatingQuestListAction : Action
 
 
-object RepeatingQuestListReducer : ViewStateReducer<AppState, RepeatingQuestListViewState> {
+object RepeatingQuestListReducer : BaseViewStateReducer<RepeatingQuestListViewState>() {
+
+    override val stateKey = key<RepeatingQuestListViewState>()
 
     override fun reduce(
         state: AppState,
@@ -24,8 +26,6 @@ object RepeatingQuestListReducer : ViewStateReducer<AppState, RepeatingQuestList
 
     override fun defaultState() =
         RepeatingQuestListViewState(RepeatingQuestListViewState.StateType.LOADING)
-
-    override val key = RepeatingQuestListViewState::class.java
 
 }
 

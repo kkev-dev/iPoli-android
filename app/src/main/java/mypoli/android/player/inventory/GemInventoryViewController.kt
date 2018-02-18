@@ -7,9 +7,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import mypoli.android.R
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.common.redux.android.ReduxViewController
 import mypoli.android.common.view.CurrencyConverterDialogController
 
@@ -20,7 +20,9 @@ import mypoli.android.common.view.CurrencyConverterDialogController
 
 data class GemInventoryViewState(val gems: Int) : ViewState
 
-object GemInventoryReducer : ViewStateReducer<AppState, GemInventoryViewState> {
+object GemInventoryReducer : BaseViewStateReducer<GemInventoryViewState>() {
+
+    override val stateKey = key<GemInventoryViewState>()
 
     override fun reduce(
         state: AppState,
@@ -29,9 +31,6 @@ object GemInventoryReducer : ViewStateReducer<AppState, GemInventoryViewState> {
     ) = GemInventoryViewState(gems = state.dataState.player?.gems ?: 0)
 
     override fun defaultState() = GemInventoryViewState(0)
-
-    override val key = GemInventoryViewState::class.java
-
 }
 
 class GemInventoryViewController :

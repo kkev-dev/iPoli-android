@@ -2,10 +2,10 @@ package mypoli.android.pet.store
 
 import mypoli.android.R
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.DataLoadedAction
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.pet.AndroidPetAvatar
 import mypoli.android.pet.PetAvatar
 import mypoli.android.pet.PetMood
@@ -27,7 +27,9 @@ sealed class PetStoreAction : Action {
     object PetTooExpensive : PetStoreAction()
 }
 
-object PetStoreReducer : ViewStateReducer<AppState, PetStoreViewState> {
+object PetStoreReducer : BaseViewStateReducer<PetStoreViewState>() {
+
+    override val stateKey = key<PetStoreViewState>()
 
     override fun reduce(
         state: AppState,
@@ -94,8 +96,6 @@ object PetStoreReducer : ViewStateReducer<AppState, PetStoreViewState> {
             playerGems = 0,
             pets = listOf()
         )
-
-    override val key = PetStoreViewState::class.java
 }
 
 data class PetStoreViewState(

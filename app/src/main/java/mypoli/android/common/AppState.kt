@@ -1,5 +1,6 @@
 package mypoli.android.common
 
+import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.common.redux.CompositeState
 import mypoli.android.common.redux.State
@@ -19,6 +20,10 @@ sealed class UIAction : Action {
     data class Attach<S : CompositeState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
 
     data class Detach<S : CompositeState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
+}
+
+abstract class BaseViewStateReducer<VS : ViewState> : ViewStateReducer<AppState, VS> {
+    inline fun <reified VS> key() = VS::class.java
 }
 
 class AppState(

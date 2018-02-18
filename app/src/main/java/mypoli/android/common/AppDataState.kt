@@ -31,6 +31,9 @@ data class AppDataState(
 ) : State
 
 object AppDataReducer : Reducer<AppState, AppDataState> {
+
+    override val stateKey = AppDataState::class.java
+
     override fun reduce(state: AppState, subState: AppDataState, action: Action) =
         when (action) {
 
@@ -47,8 +50,6 @@ object AppDataReducer : Reducer<AppState, AppDataState> {
             }
             else -> subState
         }
-
-    override val key = AppDataState::class.java
 
     override fun defaultState(): AppDataState {
         return AppDataState(

@@ -4,10 +4,10 @@ import mypoli.android.challenge.data.AndroidPredefinedChallenge
 import mypoli.android.challenge.data.Challenge
 import mypoli.android.challenge.data.PredefinedChallenge
 import mypoli.android.common.AppState
+import mypoli.android.common.BaseViewStateReducer
 import mypoli.android.common.DataLoadedAction
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.ViewStateReducer
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>
@@ -26,11 +26,12 @@ sealed class ChallengeListForCategoryAction : Action {
 
     data class ChallengeTooExpensive(val challenge: PredefinedChallenge) :
         ChallengeListForCategoryAction()
-
 }
 
-object ChallengeListForCategoryReducer :
-    ViewStateReducer<AppState, ChallengeListForCategoryViewState> {
+object ChallengeListForCategoryReducer : BaseViewStateReducer<ChallengeListForCategoryViewState>() {
+
+    override val stateKey = key<ChallengeListForCategoryViewState>()
+
     override fun reduce(
         state: AppState,
         subState: ChallengeListForCategoryViewState,
@@ -65,7 +66,7 @@ object ChallengeListForCategoryReducer :
                         ChallengeListForCategoryViewState.ChallengeModel(
                             it,
                             it.gemPrice,
-                            action.player.hasChallenge(it) ?: false
+                            action.player.hasChallenge(it)
                         )
                     }
                 )
@@ -97,8 +98,6 @@ object ChallengeListForCategoryReducer :
             type = ChallengeListForCategoryViewState.StateType.LOADING
         )
     }
-
-    override val key = ChallengeListForCategoryViewState::class.java
 }
 
 data class ChallengeListForCategoryViewState(
@@ -107,6 +106,7 @@ data class ChallengeListForCategoryViewState(
     val playerGems: Int = 0,
     val challenges: List<ChallengeModel> = listOf()
 ) : ViewState {
+
     enum class StateType {
         LOADING,
         PLAYER_CHANGED,
