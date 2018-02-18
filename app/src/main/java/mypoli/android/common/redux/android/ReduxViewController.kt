@@ -33,6 +33,8 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : UIRedu
 
     protected abstract val reducer: R
 
+    private var currentState: VS? = null
+
     override fun onContextAvailable(context: Context) {
         inject(myPoliApp.module(context))
     }
@@ -48,6 +50,7 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : UIRedu
             override fun preDetach(controller: Controller, view: View) {
                 stateStore.unsubscribe(this@ReduxViewController)
                 stateStore.dispatch(UIAction.Detach(reducer.key))
+                currentState = null
             }
         }
         addLifecycleListener(lifecycleListener)
@@ -58,9 +61,17 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : UIRedu
     }
 
     override fun onStateChanged(newState: AppState) {
-        launch(UI) {
-            render(newState.stateFor(reducer.key), view!!)
+        val newState = newState.stateFor(reducer.key)
+        if(newState != currentState) {
+            currentState = newState
+
+            launch(UI) {
+
+                render(newState, view!!)
+            }
         }
+
+
     }
 
     abstract fun render(state: VS, view: View)
