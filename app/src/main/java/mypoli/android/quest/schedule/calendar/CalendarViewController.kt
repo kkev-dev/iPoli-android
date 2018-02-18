@@ -47,21 +47,21 @@ class CalendarViewController(args: Bundle? = null) :
 
     override fun render(state: CalendarViewState, view: View) {
 
-        when (state.type) {
-            CalendarViewState.StateType.INITIAL -> {
-                removeDayViewPagerAdapter(view)
-                createDayViewPagerAdapter(state, view)
-            }
-
-            CalendarViewState.StateType.CALENDAR_DATE_CHANGED -> {
-                removeDayViewPagerAdapter(view)
-                createDayViewPagerAdapter(state, view)
-            }
-
-            CalendarViewState.StateType.SWIPE_DATE_CHANGED -> {
-                updateDayViewPagerAdapter(state)
-            }
-        }
+//        when (state.type) {
+//            CalendarViewState.StateType.INITIAL -> {
+//                removeDayViewPagerAdapter(view)
+//                createDayViewPagerAdapter(state, view)
+//            }
+//
+//            CalendarViewState.StateType.CALENDAR_DATE_CHANGED -> {
+//                removeDayViewPagerAdapter(view)
+//                createDayViewPagerAdapter(state, view)
+//            }
+//
+//            CalendarViewState.StateType.SWIPE_DATE_CHANGED -> {
+//                updateDayViewPagerAdapter(state)
+//            }
+//        }
     }
 
     private fun removeDayViewPagerAdapter(view: View) {

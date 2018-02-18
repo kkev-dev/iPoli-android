@@ -186,7 +186,9 @@ class FirestoreQuestRepository(
 
     override fun findCompletedForDate(date: LocalDate): List<Quest> {
         val query = collectionReference
-            .whereGreaterThanOrEqualTo("completedAtDate", date.startOfDayUTC())
+            // Due to Firestore bug (kinda) we can't query using the same value as data
+            // see httpsr://stackoverflow.com/a/47379643/6336582
+            .whereGreaterThan("completedAtDate", date.startOfDayUTC() - 1)
             .whereLessThanOrEqualTo("completedAtDate", date.startOfDayUTC())
         return query.entities
     }

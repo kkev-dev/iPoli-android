@@ -2,6 +2,7 @@ package mypoli.android.common.redux
 
 import mypoli.android.common.UIAction
 import mypoli.android.common.redux.MiddleWare.Result.Continue
+import timber.log.Timber
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
@@ -38,6 +39,9 @@ abstract class CombinedState<T>(
 
     fun update(stateData: Map<Class<*>, State>) =
         createWithData(stateData.plus(stateData))
+
+    fun remove(stateKey: Class<*>) =
+        createWithData(stateData.minus(stateKey))
 
     val keys = stateData.keys
 
@@ -107,44 +111,28 @@ class StateStore<S : CombinedState<S>>(
     class CombinedReducer<S : CombinedState<S>> {
 
         fun reduce(state: S, action: Action, reducers: List<Reducer<S, *>>): S {
-            if (action is UIAction.Attach) {
-                val key = action.reducer.key
-                val s = action.reducer.defaultState()
-                return state.update(key, s)
+
+            val keyToReducer = reducers.map { it.key to it }.toMap()
+
+            if (action is UIAction.Attach<*>) {
+                Timber.d("Attaching ${action.stateKey}")
+                require(keyToReducer.contains(action.stateKey))
+                val reducer = keyToReducer[action.stateKey]!!
+                return state.update(action.stateKey, reducer.defaultState())
             }
 
-            val newState = reducers.map {
-                val subState = it.reduce(state, action)
-                it.key as Class<*> to subState
+            if (action is UIAction.Detach<*>) {
+                require(keyToReducer.contains(action.stateKey))
+                return state.remove(action.stateKey)
+            }
+
+            val newState = state.keys.map {
+                val reducer = keyToReducer[it]!!
+                val subState = reducer.reduce(state, action)
+                it to subState
             }.toMap()
 
             return state.update(newState)
-
-//            return newState
-
-//        return state.copy(
-//            appDataState = AppDataReducer.reduce(state, action),
-////        scheduleState = ScheduleReducer.reduce(state, action),
-////            uiState = ScheduleReducer.reduce(state, action),
-//            calendarState = CalendarReducer.reduce(state, action),
-//            agendaState = AgendaReducer.reduce(state, action),
-//            petStoreState = PetStoreReducer.reduce(state, action),
-//            authState = AuthReducer.reduce(state, action),
-//            repeatingQuestListState = RepeatingQuestListReducer.reduce(state, action)
-//        )
         }
-
-//    override fun defaultState() =
-//        AppState(
-//            appDataState = AppDataReducer.defaultState(),
-////            scheduleState = ScheduleReducer.defaultState(),
-//            uiState = mapOf(),
-//            calendarState = CalendarReducer.defaultState(),
-//            agendaState = AgendaReducer.defaultState(),
-//            petStoreState = PetStoreReducer.defaultState(),
-//            challengeListForCategoryState = ChallengeListForCategoryReducer.defaultState(),
-//            authState = AuthReducer.defaultState(),
-//            repeatingQuestListState = RepeatingQuestListReducer.defaultState()
-//        )
     }
 }

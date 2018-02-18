@@ -19,9 +19,9 @@ sealed class LoadDataAction : Action {
 }
 
 sealed class UIAction : Action {
-    data class Attach(val reducer: UIReducer<*, *>) : UIAction()
+    data class Attach<S : State>(val stateKey: Class<S>) : UIAction()
 
-    data class Detach(val reducer: UIReducer<*, *>) : UIAction()
+    data class Detach<S : State>(val stateKey: Class<S>) : UIAction()
 }
 
 //interface UIState
@@ -35,17 +35,7 @@ class AppState(
             AppDataReducer.defaultState()
         )
     )
-)
-//    val appDataState: AppDataState,
-////    val scheduleState: ScheduleState,
-//    val calendarState: CalendarState,
-//    val agendaState: AgendaState,
-//    val petStoreState: PetStoreState,
-//    val challengeListForCategoryState: ChallengeListForCategoryState,
-//    val authState: AuthState,
-//    val repeatingQuestListState: RepeatingQuestListState,
-//    val uiState: Map<String, ViewState>
-    : CombinedState<AppState>(data) {
+) : CombinedState<AppState>(data) {
 
     val dataState: AppDataState = stateFor(AppDataState::class.java)
 
