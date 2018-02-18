@@ -99,6 +99,7 @@ class myPoliApp : Application() {
         ).transitive()
 
         instance = this
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val notificationManager =
                 getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager

@@ -1,9 +1,10 @@
 package mypoli.android.common.redux
 
+import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.UIAction
 import mypoli.android.common.redux.MiddleWare.Result.Continue
-import timber.log.Timber
 import java.util.concurrent.CopyOnWriteArrayList
+import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>
@@ -14,11 +15,30 @@ interface Action
 
 interface State
 
-interface SideEffect<S : State> {
+interface SideEffect<in S : State> {
 
     suspend fun execute(action: Action, state: S, dispatcher: Dispatcher)
 
     fun canHandle(action: Action): Boolean
+}
+
+interface SideEffectExecutor<S : CombinedState<S>> {
+    fun execute(sideEffect: SideEffect<S>, action: Action, state: S, dispatcher: Dispatcher)
+}
+
+class CoroutineSideEffectExecutor<S : CombinedState<S>>(
+    private val coroutineContext: CoroutineContext
+) : SideEffectExecutor<S> {
+    override fun execute(
+        sideEffect: SideEffect<S>,
+        action: Action,
+        state: S,
+        dispatcher: Dispatcher
+    ) {
+        launch(coroutineContext) {
+            sideEffect.execute(action, state, dispatcher)
+        }
+    }
 }
 
 abstract class CombinedState<T>(
@@ -31,6 +51,7 @@ abstract class CombinedState<T>(
 
         val data = stateData[key]
 
+        @Suppress("unchecked_cast")
         return data as S
     }
 
@@ -65,20 +86,23 @@ interface Dispatcher {
 }
 
 class StateStore<S : CombinedState<S>>(
-    private val reducers: List<Reducer<S, *>>,
+    private val reducers: Set<Reducer<S, *>>,
     defaultState: S,
-    middleware: List<MiddleWare<S>> = listOf()
+    private val sideEffectExecutor: SideEffectExecutor<S>,
+    middleware: List<MiddleWare<S>> = listOf(),
+    effects: Set<SideEffect<S>> = setOf()
 ) : Dispatcher {
 
     interface StateChangeSubscriber<in S> {
-
         fun onStateChanged(newState: S)
     }
+
+    private val sideEffects: CopyOnWriteArrayList<SideEffect<S>> = CopyOnWriteArrayList(effects)
 
     private var stateChangeSubscribers: CopyOnWriteArrayList<StateChangeSubscriber<S>> =
         CopyOnWriteArrayList()
     private var state = defaultState
-    private val middleWare = CompositeMiddleware<S>(middleware)
+    private val middleWare = CompositeMiddleware(middleware)
     private val reducer = CombinedReducer<S>()
 
     override fun <A : Action> dispatch(action: A) {
@@ -90,6 +114,15 @@ class StateStore<S : CombinedState<S>>(
         val newState = reducer.reduce(state, action, reducers)
         state = newState
         notifyStateChanged(newState)
+        executeSideEffects(action)
+    }
+
+    private fun executeSideEffects(action: Action) {
+        sideEffects
+            .filter { it.canHandle(action) }
+            .forEach {
+                sideEffectExecutor.execute(it, action, state, this)
+            }
     }
 
     private fun notifyStateChanged(newState: S) {
@@ -110,12 +143,11 @@ class StateStore<S : CombinedState<S>>(
 
     class CombinedReducer<S : CombinedState<S>> {
 
-        fun reduce(state: S, action: Action, reducers: List<Reducer<S, *>>): S {
+        fun reduce(state: S, action: Action, reducers: Set<Reducer<S, *>>): S {
 
             val keyToReducer = reducers.map { it.key to it }.toMap()
 
             if (action is UIAction.Attach<*>) {
-                Timber.d("Attaching ${action.stateKey}")
                 require(keyToReducer.contains(action.stateKey))
                 val reducer = keyToReducer[action.stateKey]!!
                 return state.update(action.stateKey, reducer.defaultState())

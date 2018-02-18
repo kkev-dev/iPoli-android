@@ -12,7 +12,6 @@ import mypoli.android.common.AppSideEffect
 import mypoli.android.common.AppState
 import mypoli.android.common.LoadDataAction
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.Dispatcher
 import mypoli.android.player.AuthProvider
 import mypoli.android.player.Player
 import mypoli.android.player.persistence.PlayerRepository
@@ -24,7 +23,7 @@ import java.util.regex.Pattern
  * Created by Venelin Valkov <venelin@mypoli.fun>
  * on 02/07/2018.
  */
-class AuthSideEffect : AppSideEffect {
+class AuthSideEffect : AppSideEffect() {
 
     private val playerRepository by required { playerRepository }
     private val sharedPreferences by required { sharedPreferences }
@@ -32,11 +31,11 @@ class AuthSideEffect : AppSideEffect {
 
     override fun canHandle(action: Action) = action is AuthAction
 
-    override suspend fun doExecute(action: Action, state: AppState, dispatcher: Dispatcher) {
+    override suspend fun doExecute(action: Action, state: AppState) {
 
         when (action) {
             AuthAction.Load -> {
-                dispatcher.dispatch(AuthAction.LoadSignUp(playerRepository.hasPlayer()))
+                dispatch(AuthAction.LoadSignUp(playerRepository.hasPlayer()))
             }
 
             is AuthAction.CompleteUserAuth -> {
@@ -54,16 +53,16 @@ class AuthSideEffect : AppSideEffect {
                             val anonymousPlayerId =
                                 sharedPreferences.getString(Constants.KEY_PLAYER_ID, null)
                             savePlayerId(user)
-                            dispatcher.dispatch(LoadDataAction.ChangePlayer(anonymousPlayerId))
-                            dispatcher.dispatch(AuthAction.GuestPlayerLoggedIn)
+                            dispatch(LoadDataAction.ChangePlayer(anonymousPlayerId))
+                            dispatch(AuthAction.GuestPlayerLoggedIn)
                         }
                         playerRepository.hasPlayer() -> {
-                            mergeFromAnonymous(dispatcher)
+                            mergeFromAnonymous()
                         }
                         isNewUser -> {
-                            handleMissingRegisteredUser(dispatcher)
+                            handleMissingRegisteredUser()
                         }
-                        else -> loginExistingPlayer(user, dispatcher)
+                        else -> loginExistingPlayer(user)
                     }
 
                 } else {
@@ -71,12 +70,12 @@ class AuthSideEffect : AppSideEffect {
                         playerRepository.hasPlayer() -> {
                             updatePlayerAuthProvider(user)
                             playerRepository.addUsername(username)
-                            dispatcher.dispatch(AuthAction.AccountsLinked)
+                            dispatch(AuthAction.AccountsLinked)
                         }
                         isNewUser -> {
-                            createNewPlayer(user, username, dispatcher)
+                            createNewPlayer(user, username)
                         }
-                        else -> loginExistingPlayer(user, dispatcher)
+                        else -> loginExistingPlayer(user)
                     }
                 }
             }
@@ -89,7 +88,7 @@ class AuthSideEffect : AppSideEffect {
                         val usernameValidationError =
                             findUsernameValidationError(username, playerRepository)
                         if (usernameValidationError != null) {
-                            dispatcher.dispatch(
+                            dispatch(
                                 AuthAction.UsernameValidationFailed(
                                     usernameValidationError
                                 )
@@ -97,14 +96,14 @@ class AuthSideEffect : AppSideEffect {
                             return
                         }
 
-                        dispatcher.dispatch(AuthAction.StartSignUp(AuthViewState.Provider.FACEBOOK))
+                        dispatch(AuthAction.StartSignUp(AuthViewState.Provider.FACEBOOK))
                     }
 
                     AuthViewState.Provider.GOOGLE -> {
                         val usernameValidationError =
                             findUsernameValidationError(username, playerRepository)
                         if (usernameValidationError != null) {
-                            dispatcher.dispatch(
+                            dispatch(
                                 AuthAction.UsernameValidationFailed(
                                     usernameValidationError
                                 )
@@ -112,23 +111,23 @@ class AuthSideEffect : AppSideEffect {
                             return
                         }
 
-                        dispatcher.dispatch(AuthAction.StartSignUp(AuthViewState.Provider.GOOGLE))
+                        dispatch(AuthAction.StartSignUp(AuthViewState.Provider.GOOGLE))
                     }
 
                     AuthViewState.Provider.GUEST -> {
-                        dispatcher.dispatch(AuthAction.StartSignUp(AuthViewState.Provider.GUEST))
+                        dispatch(AuthAction.StartSignUp(AuthViewState.Provider.GUEST))
                     }
                 }
             }
         }
     }
 
-    private fun handleMissingRegisteredUser(dispatcher: Dispatcher) {
-        dispatcher.dispatch(AuthAction.DeleteAccount)
+    private fun handleMissingRegisteredUser() {
+        dispatch(AuthAction.DeleteAccount)
     }
 
-    private fun mergeFromAnonymous(dispatcher: Dispatcher) {
-        dispatcher.dispatch(AuthAction.SignOutAccount)
+    private fun mergeFromAnonymous() {
+        dispatch(AuthAction.SignOutAccount)
     }
 
     private fun updatePlayerAuthProvider(
@@ -167,8 +166,7 @@ class AuthSideEffect : AppSideEffect {
 
     private fun createNewPlayer(
         user: FirebaseUser,
-        username: String,
-        dispatcher: Dispatcher
+        username: String
     ) {
 
         val authProvider = if (user.providerData.size == 1) {
@@ -213,15 +211,15 @@ class AuthSideEffect : AppSideEffect {
             playerRepository.addUsername(username)
         }
 
-        prepareAppStart(dispatcher)
-        dispatcher.dispatch(AuthAction.PlayerCreated)
+        prepareAppStart()
+        dispatch(AuthAction.PlayerCreated)
 
     }
 
-    private fun loginExistingPlayer(user: FirebaseUser, dispatcher: Dispatcher) {
+    private fun loginExistingPlayer(user: FirebaseUser) {
         savePlayerId(user)
-        prepareAppStart(dispatcher)
-        dispatcher.dispatch(AuthAction.PlayerLoggedIn)
+        prepareAppStart()
+        dispatch(AuthAction.PlayerLoggedIn)
     }
 
     @SuppressLint("ApplySharedPref")
@@ -229,8 +227,8 @@ class AuthSideEffect : AppSideEffect {
         sharedPreferences.edit().putString(Constants.KEY_PLAYER_ID, user.uid).commit()
     }
 
-    private fun prepareAppStart(dispatcher: Dispatcher) {
-        dispatcher.dispatch(LoadDataAction.All)
+    private fun prepareAppStart() {
+        dispatch(LoadDataAction.All)
         petStatsChangeScheduler.schedule()
     }
 

@@ -94,7 +94,7 @@ object MiddlewareSpek : Spek({
         }
     }
 
-    describe("SagaMiddleware") {
+    describe("SideEffectMiddleware") {
 
         var asyncExecutes = 0
 
@@ -114,7 +114,7 @@ object MiddlewareSpek : Spek({
 
             runBlocking {
                 executeMiddleware(
-                    SagaMiddleware<TestState>(
+                    SideEffectMiddleware<TestState>(
                         sideEffects = listOf(TestSideEffect()),
                         coroutineContext = coroutineContext
                     ),
@@ -136,7 +136,7 @@ object MiddlewareSpek : Spek({
 
             runBlocking {
                 executeMiddleware(
-                    SagaMiddleware<TestState>(
+                    SideEffectMiddleware<TestState>(
                         sideEffects = listOf(NoExecuteSideEffect()),
                         coroutineContext = coroutineContext
                     ),

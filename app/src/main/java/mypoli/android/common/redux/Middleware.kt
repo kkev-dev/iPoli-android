@@ -1,9 +1,7 @@
 package mypoli.android.common.redux
 
-import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.redux.MiddleWare.Result.Continue
 import mypoli.android.common.redux.MiddleWare.Result.Stop
-import kotlin.coroutines.experimental.CoroutineContext
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>
@@ -39,24 +37,6 @@ class CompositeMiddleware<in S : State>(private val middleware: List<MiddleWare<
             }
         }
 
-        return Continue
-    }
-}
-
-class SagaMiddleware<in S : State>(
-    private val sideEffects: List<SideEffect<S>> = listOf(),
-    private val coroutineContext: CoroutineContext
-) : MiddleWare<S> {
-
-    override fun execute(state: S, dispatcher: Dispatcher, action: Action): MiddleWare.Result {
-
-        sideEffects
-            .filter { it.canHandle(action) }
-            .forEach {
-                launch(coroutineContext) {
-                    it.execute(action, state, dispatcher)
-                }
-            }
         return Continue
     }
 }

@@ -16,7 +16,7 @@ import mypoli.android.challenge.category.list.ChallengeListForCategoryReducer
 import mypoli.android.challenge.usecase.BuyChallengeUseCase
 import mypoli.android.challenge.usecase.ScheduleChallengeUseCase
 import mypoli.android.common.*
-import mypoli.android.common.redux.SagaMiddleware
+import mypoli.android.common.redux.CoroutineSideEffectExecutor
 import mypoli.android.common.redux.StateStore
 import mypoli.android.common.text.CalendarFormatter
 import mypoli.android.common.view.ColorPickerPresenter
@@ -364,7 +364,6 @@ class AndroidPresenterModule : PresenterModule, Injects<Module> {
     private val completeQuestUseCase by required { completeQuestUseCase }
     private val undoCompleteQuestUseCase by required { undoCompletedQuestUseCase }
     private val listenForPlayerChangesUseCase by required { listenForPlayerChangesUseCase }
-    private val buyChallengeUseCase by required { buyChallengeUseCase }
     private val revivePetUseCase by required { revivePetUseCase }
     private val feedPetUseCase by required { feedPetUseCase }
     private val findPetUseCase by required { findPetUseCase }
@@ -499,8 +498,8 @@ interface StateStoreModule {
 class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
 
     override val stateStore by required {
-        StateStore<AppState>(
-            listOf(
+        StateStore(
+            setOf(
                 AppDataReducer,
                 HomeReducer,
                 CalendarReducer,
@@ -512,18 +511,14 @@ class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
                 ChallengeListForCategoryReducer
             ),
             AppState(),
-            listOf(
-                SagaMiddleware<AppState>(
-                    sideEffects = listOf(
-                        LoadAllDataSideEffect(),
-                        AuthSideEffect(),
-                        AgendaSideEffect(),
-                        BuyPredefinedChallengeSideEffect(),
-                        ChangePetSideEffect(),
-                        BuyPetSideEffect()
-                    ),
-                    coroutineContext = job + CommonPool
-                )
+            CoroutineSideEffectExecutor(job + CommonPool),
+            effects = setOf(
+                LoadAllDataSideEffect(),
+                AuthSideEffect(),
+                AgendaSideEffect(),
+                BuyPredefinedChallengeSideEffect(),
+                ChangePetSideEffect(),
+                BuyPetSideEffect()
             )
         )
     }
