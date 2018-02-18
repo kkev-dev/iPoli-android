@@ -4,9 +4,9 @@ import android.content.Context
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
+import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.common.text.CalendarFormatter
 import mypoli.android.quest.schedule.agenda.AgendaAction
 import mypoli.android.quest.schedule.agenda.AgendaViewState

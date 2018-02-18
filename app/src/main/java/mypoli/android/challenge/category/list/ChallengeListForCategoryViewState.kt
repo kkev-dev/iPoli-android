@@ -5,9 +5,9 @@ import mypoli.android.challenge.data.Challenge
 import mypoli.android.challenge.data.PredefinedChallenge
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
+import mypoli.android.common.redux.ViewStateReducer
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>

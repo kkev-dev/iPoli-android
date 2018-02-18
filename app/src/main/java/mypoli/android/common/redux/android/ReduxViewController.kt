@@ -9,11 +9,11 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.AppState
 import mypoli.android.common.UIAction
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.di.Module
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.common.redux.StateStore
+import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.myPoliApp
 import space.traversal.kapsule.Injects
 import space.traversal.kapsule.inject
@@ -61,17 +61,14 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : ViewSt
     }
 
     override fun onStateChanged(newState: AppState) {
-        val newState = newState.stateFor(reducer.key)
-        if(newState != currentState) {
-            currentState = newState
+        val subState = newState.stateFor(reducer.key)
+        if (subState != currentState) {
+            currentState = subState
 
             launch(UI) {
-
-                render(newState, view!!)
+                render(subState, view!!)
             }
         }
-
-
     }
 
     abstract fun render(state: VS, view: View)

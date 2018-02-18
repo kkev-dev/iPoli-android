@@ -5,9 +5,9 @@ import com.google.firebase.auth.FirebaseUser
 import mypoli.android.Constants
 import mypoli.android.R
 import mypoli.android.common.AppState
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
+import mypoli.android.common.redux.ViewStateReducer
 
 /**
  * Created by Polina Zhelyazkova <polina@ipoli.io>

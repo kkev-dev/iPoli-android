@@ -1,9 +1,9 @@
 package mypoli.android.quest.schedule.calendar
 
 import mypoli.android.common.AppState
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
+import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.quest.schedule.ScheduleAction
 import mypoli.android.quest.schedule.ScheduleViewState
 import org.threeten.bp.LocalDate

@@ -4,11 +4,11 @@ import com.mikepenz.ionicons_typeface_library.Ionicons
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.datetime.isBetween
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.common.redux.State
+import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.common.text.DateFormatter
 import mypoli.android.common.view.AndroidColor
 import mypoli.android.common.view.AndroidIcon

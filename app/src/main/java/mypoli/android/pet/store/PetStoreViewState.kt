@@ -3,9 +3,9 @@ package mypoli.android.pet.store
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
+import mypoli.android.common.redux.ViewStateReducer
 import mypoli.android.pet.AndroidPetAvatar
 import mypoli.android.pet.PetAvatar
 import mypoli.android.pet.PetMood
