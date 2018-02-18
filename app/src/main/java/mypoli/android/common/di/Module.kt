@@ -499,7 +499,11 @@ class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
 
     override val stateStore by required {
         StateStore(
-            initialState = AppState(),
+            initialState = AppState(
+                data = mapOf(
+                    AppDataState::class.java to AppDataReducer.defaultState()
+                )
+            ),
             reducers = setOf(
                 AppDataReducer,
                 HomeReducer,

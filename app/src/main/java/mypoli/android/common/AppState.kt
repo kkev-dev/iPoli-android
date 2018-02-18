@@ -27,12 +27,7 @@ abstract class BaseViewStateReducer<VS : ViewState> : ViewStateReducer<AppState,
 }
 
 class AppState(
-    data: Map<Class<*>, State> = mapOf(
-        Pair(
-            AppDataState::class.java,
-            AppDataReducer.defaultState()
-        )
-    )
+    data: Map<Class<*>, State>
 ) : CompositeState<AppState>(data) {
 
     val dataState: AppDataState = stateFor(AppDataState::class.java)
