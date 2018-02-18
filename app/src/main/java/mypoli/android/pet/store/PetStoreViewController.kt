@@ -1,6 +1,8 @@
 package mypoli.android.pet.store
 
 import android.os.Bundle
+import android.support.annotation.DrawableRes
+import android.support.annotation.StringRes
 import android.support.v4.view.PagerAdapter
 import android.view.LayoutInflater
 import android.view.MenuItem
@@ -29,11 +31,11 @@ import mypoli.android.store.GemStoreViewController
  * on 12/4/17.
  */
 class PetStoreViewController(args: Bundle? = null) :
-    ReduxViewController<PetStoreAction, PetStoreViewState, PetStorePresenter>(
+    ReduxViewController<PetStoreAction, PetStoreViewState, PetStoreReducer>(
         args
     ) {
 
-    override val presenter get() = PetStorePresenter()
+    override val reducer = PetStoreReducer
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -72,7 +74,7 @@ class PetStoreViewController(args: Bundle? = null) :
         when (state.type) {
 
             DATA_CHANGED -> {
-                (view.petPager.adapter as PetPagerAdapter).updateAll(state.petViewModels)
+                (view.petPager.adapter as PetPagerAdapter).updateAll(state.pets.map { it.toAndroidPetModel() })
             }
 
             PET_TOO_EXPENSIVE -> {
@@ -102,7 +104,7 @@ class PetStoreViewController(args: Bundle? = null) :
         )
     }
 
-    inner class PetPagerAdapter(private var viewModels: List<PetStorePresenter.PetViewModel> = listOf()) :
+    inner class PetPagerAdapter(private var viewModels: List<PetViewModel> = listOf()) :
         PagerAdapter() {
 
         override fun instantiateItem(container: ViewGroup, position: Int): Any {
@@ -128,15 +130,15 @@ class PetStoreViewController(args: Bundle? = null) :
             action.setOnClickListener(null)
 
             when (vm.action) {
-                PetStorePresenter.PetViewModel.Action.CHANGE -> {
+                PetViewModel.Action.CHANGE -> {
                     action.dispatchOnClick(ChangePet(vm.avatar))
                 }
 
-                PetStorePresenter.PetViewModel.Action.UNLOCK -> {
+                PetViewModel.Action.UNLOCK -> {
                     action.dispatchOnClick(UnlockPet(vm.avatar))
                 }
 
-                PetStorePresenter.PetViewModel.Action.BUY -> {
+                PetViewModel.Action.BUY -> {
                     action.dispatchOnClick(BuyPet(vm.avatar))
                 }
             }
@@ -155,10 +157,27 @@ class PetStoreViewController(args: Bundle? = null) :
 
         override fun getItemPosition(`object`: Any) = PagerAdapter.POSITION_NONE
 
-        fun updateAll(viewModels: List<PetStorePresenter.PetViewModel>) {
+        fun updateAll(viewModels: List<PetViewModel>) {
             this.viewModels = viewModels
             notifyDataSetChanged()
         }
 
+    }
+
+    data class PetViewModel(
+        val avatar: PetAvatar,
+        @StringRes val name: Int,
+        @DrawableRes val image: Int,
+        val price: String,
+        @StringRes val description: Int,
+        @StringRes val actionText: Int?,
+        @DrawableRes val moodImage: Int,
+        val showAction: Boolean,
+        val showIsCurrent: Boolean,
+        val action: Action?
+    ) {
+        enum class Action {
+            CHANGE, UNLOCK, BUY
+        }
     }
 }

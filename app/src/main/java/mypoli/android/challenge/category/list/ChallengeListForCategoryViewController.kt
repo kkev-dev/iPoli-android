@@ -23,19 +23,18 @@ import mypoli.android.challenge.category.list.ChallengeListForCategoryViewState.
 import mypoli.android.challenge.data.AndroidPredefinedChallenge
 import mypoli.android.challenge.data.Challenge
 import mypoli.android.challenge.data.PredefinedChallenge
-import mypoli.android.common.mvi.MviViewController
+import mypoli.android.common.redux.android.ReduxViewController
 import mypoli.android.common.view.*
 import mypoli.android.player.inventory.GemInventoryViewController
-import space.traversal.kapsule.required
 
 /**
  * Created by Venelin Valkov <venelin@mypoli.fun>
  * on 12/30/17.
  */
 class ChallengeListForCategoryViewController :
-    MviViewController<ChallengeListForCategoryViewState, ChallengeListForCategoryViewController, ChallengeListForCategoryPresenter, ChallengeListForCategoryIntent> {
+    ReduxViewController<ChallengeListForCategoryAction, ChallengeListForCategoryViewState, ChallengeListForCategoryReducer> {
 
-    private val presenter by required { challengeListForCategoryPresenter }
+    override val reducer = ChallengeListForCategoryReducer
 
     private lateinit var challengeCategory: Challenge.Category
 
@@ -44,8 +43,6 @@ class ChallengeListForCategoryViewController :
     }
 
     constructor(args: Bundle? = null) : super(args)
-
-    override fun createPresenter() = presenter
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -85,8 +82,8 @@ class ChallengeListForCategoryViewController :
     override fun onAttach(view: View) {
         showBackButton()
         super.onAttach(view)
-        send(
-            ChallengeListForCategoryIntent.LoadData(
+        dispatch(
+            ChallengeListForCategoryAction.LoadData(
                 challengeCategory
             )
         )
@@ -95,7 +92,7 @@ class ChallengeListForCategoryViewController :
     override fun render(state: ChallengeListForCategoryViewState, view: View) {
         when (state.type) {
             PLAYER_CHANGED -> {
-                (view.challengeList.adapter as ChallengeAdapter).updateAll(state.viewModels)
+                (view.challengeList.adapter as ChallengeAdapter).updateAll(state.challenges.map { it.toAndroidChallenge() })
             }
 
             CHALLENGE_TOO_EXPENSIVE -> {
@@ -166,8 +163,8 @@ class ChallengeListForCategoryViewController :
                     )
                 }
 
-                itemView.sendOnClick(
-                    ChallengeListForCategoryIntent.BuyChallenge(
+                itemView.dispatchOnClick(
+                    ChallengeListForCategoryAction.BuyChallenge(
                         vm.challenge
                     )
                 )

@@ -11,7 +11,6 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.Job
 import mypoli.android.challenge.PersonalizeChallengePresenter
 import mypoli.android.challenge.category.ChallengeCategoryListPresenter
-import mypoli.android.challenge.category.list.ChallengeListForCategoryPresenter
 import mypoli.android.challenge.usecase.BuyChallengeUseCase
 import mypoli.android.challenge.usecase.ScheduleChallengeUseCase
 import mypoli.android.common.*
@@ -337,7 +336,6 @@ interface PresenterModule {
     val currencyConverterPresenter: CurrencyConverterPresenter
     val gemStorePresenter: GemStorePresenter
     val challengeCategoryListPresenter: ChallengeCategoryListPresenter
-    val challengeListForCategoryPresenter: ChallengeListForCategoryPresenter
     val personalizeChallengePresenter: PersonalizeChallengePresenter
     val timerPresenter: TimerPresenter
     val petMessagePresenter: PetMessagePresenter
@@ -451,12 +449,6 @@ class AndroidPresenterModule : PresenterModule, Injects<Module> {
         get() = ChallengeCategoryListPresenter(
             job
         )
-    override val challengeListForCategoryPresenter
-        get() = ChallengeListForCategoryPresenter(
-            listenForPlayerChangesUseCase,
-            buyChallengeUseCase,
-            job
-        )
     override val personalizeChallengePresenter
         get() = PersonalizeChallengePresenter(
             scheduleChallengeUseCase,
@@ -499,8 +491,8 @@ interface StateStoreModule {
 class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
 
     override val stateStore by required {
-        StateStore(
-            CombinedReducer,
+        StateStore<AppState>(
+            listOf(AppDataReducer),
             listOf(
                 SagaMiddleware<AppState>(
                     sideEffects = listOf(

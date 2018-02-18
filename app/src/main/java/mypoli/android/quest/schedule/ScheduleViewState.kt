@@ -42,52 +42,50 @@ object ScheduleReducer : UIReducer<AppState, ScheduleViewState> {
             datePickerState = ScheduleViewState.DatePickerState.INVISIBLE
         )
 
-    override fun reduce(state: AppState, action: Action) =
-        state.stateFor(ScheduleViewState::class.java).let {
-            when (action) {
-                is DataLoadedAction.PlayerChanged -> reducePlayerChanged(
-                    it,
-                    action
-                )
-                is ScheduleAction -> reduceCalendarAction(
-                    it,
-                    action
-                )
-                is CalendarAction.SwipeChangeDate -> {
-                    val currentPos = state.calendarState.adapterPosition
-                    val newPos = action.adapterPosition
-                    val curDate = it.currentDate
-                    val newDate = if (newPos < currentPos)
-                        curDate.minusDays(1)
-                    else
-                        curDate.plusDays(1)
+    override fun reduce(state: AppState, uiState: ScheduleViewState, action: Action) =
+        when (action) {
+            is DataLoadedAction.PlayerChanged -> reducePlayerChanged(
+                uiState,
+                action
+            )
+            is ScheduleAction -> reduceCalendarAction(
+                uiState,
+                action
+            )
+            is CalendarAction.SwipeChangeDate -> {
+                val currentPos = state.calendarState.adapterPosition
+                val newPos = action.adapterPosition
+                val curDate = uiState.currentDate
+                val newDate = if (newPos < currentPos)
+                    curDate.minusDays(1)
+                else
+                    curDate.plusDays(1)
 
-                    it.copy(
-                        type = ScheduleViewState.StateType.SWIPE_DATE_CHANGED,
-                        currentDate = newDate
+                uiState.copy(
+                    type = ScheduleViewState.StateType.SWIPE_DATE_CHANGED,
+                    currentDate = newDate
+                )
+            }
+            is AgendaAction.FirstVisibleItemChanged -> {
+
+                val itemPos = action.itemPosition
+                val startDate =
+                    state.stateFor(AgendaViewState::class.java).agendaItems[itemPos].startDate()
+
+                if (uiState.currentDate.isEqual(startDate)) {
+                    uiState.copy(
+                        type = ScheduleViewState.StateType.IDLE
+                    )
+                } else {
+                    uiState.copy(
+                        type = ScheduleViewState.StateType.DATE_AUTO_CHANGED,
+                        currentDate = startDate,
+                        currentMonth = YearMonth.of(startDate.year, startDate.month)
                     )
                 }
-                is AgendaAction.FirstVisibleItemChanged -> {
 
-                    val itemPos = action.itemPosition
-                    val startDate =
-                        state.stateFor(AgendaViewState::class.java).agendaItems[itemPos].startDate()
-
-                    if (it.currentDate.isEqual(startDate)) {
-                        it.copy(
-                            type = ScheduleViewState.StateType.IDLE
-                        )
-                    } else {
-                        it.copy(
-                            type = ScheduleViewState.StateType.DATE_AUTO_CHANGED,
-                            currentDate = startDate,
-                            currentMonth = YearMonth.of(startDate.year, startDate.month)
-                        )
-                    }
-
-                }
-                else -> it
             }
+            else -> uiState
         }
 
     private fun reducePlayerChanged(

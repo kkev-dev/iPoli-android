@@ -1,12 +1,14 @@
 package mypoli.android.pet.store
 
+import mypoli.android.R
 import mypoli.android.common.AppState
-import mypoli.android.common.AppStateReducer
 import mypoli.android.common.DataLoadedAction
+import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.State
+import mypoli.android.pet.AndroidPetAvatar
 import mypoli.android.pet.PetAvatar
+import mypoli.android.pet.PetMood
 import mypoli.android.player.Player
 
 /**
@@ -25,7 +27,82 @@ sealed class PetStoreAction : Action {
     object PetTooExpensive : PetStoreAction()
 }
 
-data class PetStoreState(val type: StateType, val pets: List<PetModel>) : State {
+object PetStoreReducer : UIReducer<AppState, PetStoreViewState> {
+
+    override fun reduce(
+        state: AppState,
+        uiState: PetStoreViewState,
+        action: Action
+    ): PetStoreViewState {
+        val petStoreState = uiState.copy(
+            playerGems = state.dataState.player?.gems ?: 0
+        )
+        return when (action) {
+            is DataLoadedAction.PlayerChanged -> {
+                val player = action.player
+                petStoreState.copy(
+                    type = PetStoreViewState.StateType.DATA_CHANGED,
+                    pets = createPetModels(player)
+                )
+            }
+
+            is PetStoreAction.BuyPet -> {
+                petStoreState.copy(
+                    type = PetStoreViewState.StateType.LOADING
+                )
+            }
+
+            PetStoreAction.PetBought -> {
+                petStoreState.copy(
+                    type = PetStoreViewState.StateType.PET_BOUGHT
+                )
+            }
+
+            PetStoreAction.PetTooExpensive -> {
+                petStoreState.copy(
+                    type = PetStoreViewState.StateType.PET_TOO_EXPENSIVE
+                )
+            }
+
+            is PetStoreAction.UnlockPet -> {
+                petStoreState.copy(
+                    type = PetStoreViewState.StateType.SHOW_GEM_STORE
+                )
+            }
+            is PetStoreAction.ChangePet -> {
+                petStoreState.copy(
+                    type = PetStoreViewState.StateType.LOADING
+                )
+            }
+            else -> petStoreState
+        }
+    }
+
+    private fun createPetModels(player: Player) =
+        PetAvatar.values().map {
+            PetStoreViewState.PetModel(
+                avatar = it,
+                isBought = player.hasPet(it),
+                isCurrent = player.pet.avatar == it,
+                isLocked = (it == PetAvatar.DOG && !player.hasPet(PetAvatar.DOG))
+            )
+        }
+
+    override fun defaultState() =
+        PetStoreViewState(
+            type = PetStoreViewState.StateType.LOADING,
+            playerGems = 0,
+            pets = listOf()
+        )
+
+    override val key = PetStoreViewState::class.java
+}
+
+data class PetStoreViewState(
+    val type: StateType = StateType.DATA_CHANGED,
+    val playerGems: Int = 0,
+    val pets: List<PetModel> = listOf()
+) : ViewState {
     data class PetModel(
         val avatar: PetAvatar,
         val isBought: Boolean,
@@ -43,75 +120,69 @@ data class PetStoreState(val type: StateType, val pets: List<PetModel>) : State 
     }
 }
 
-object PetStoreReducer : AppStateReducer<PetStoreState> {
 
-    override fun reduce(state: AppState, action: Action): PetStoreState {
-        val petStoreState = state.petStoreState
-        return when (action) {
-            is DataLoadedAction.PlayerChanged -> {
-                val player = action.player
-                petStoreState.copy(
-                    type = PetStoreState.StateType.DATA_CHANGED,
-                    pets = createPetModels(player)
-                )
-            }
+fun PetStoreViewState.PetModel.toAndroidPetModel(): PetStoreViewController.PetViewModel {
+    val androidAvatar = AndroidPetAvatar.valueOf(avatar.name)
 
-            is PetStoreAction.BuyPet -> {
-                petStoreState.copy(
-                    type = PetStoreState.StateType.LOADING
-                )
-            }
-
-            PetStoreAction.PetBought -> {
-                petStoreState.copy(
-                    type = PetStoreState.StateType.PET_BOUGHT
-                )
-            }
-
-            PetStoreAction.PetTooExpensive -> {
-                petStoreState.copy(
-                    type = PetStoreState.StateType.PET_TOO_EXPENSIVE
-                )
-            }
-
-            is PetStoreAction.UnlockPet -> {
-                petStoreState.copy(
-                    type = PetStoreState.StateType.SHOW_GEM_STORE
-                )
-            }
-            is PetStoreAction.ChangePet -> {
-                petStoreState.copy(
-                    type = PetStoreState.StateType.LOADING
-                )
-            }
-            else -> petStoreState
-        }
-    }
-
-    private fun createPetModels(player: Player) =
-        PetAvatar.values().map {
-            PetStoreState.PetModel(
-                avatar = it,
-                isBought = player.hasPet(it),
-                isCurrent = player.pet.avatar == it,
-                isLocked = (it == PetAvatar.DOG && !player.hasPet(PetAvatar.DOG))
+    return when {
+        isCurrent -> {
+            PetStoreViewController.PetViewModel(
+                avatar = avatar,
+                name = androidAvatar.petName,
+                image = androidAvatar.image,
+                price = avatar.gemPrice.toString(),
+                description = androidAvatar.description,
+                actionText = null,
+                moodImage = androidAvatar.moodImage[PetMood.HAPPY]!!,
+                showAction = false,
+                showIsCurrent = true,
+                action = null
             )
         }
 
-    override fun defaultState() = PetStoreState(PetStoreState.StateType.LOADING, listOf())
-}
+        isBought -> {
+            PetStoreViewController.PetViewModel(
+                avatar = avatar,
+                name = androidAvatar.petName,
+                image = androidAvatar.image,
+                price = avatar.gemPrice.toString(),
+                description = androidAvatar.description,
+                actionText = R.string.store_pet_in_inventory,
+                moodImage = androidAvatar.moodImage[PetMood.GOOD]!!,
+                showAction = true,
+                showIsCurrent = false,
+                action = PetStoreViewController.PetViewModel.Action.CHANGE
+            )
+        }
 
-data class PetStoreViewState(
-    val type: StateType = StateType.DATA_CHANGED,
-    val playerGems: Int = 0,
-    val petViewModels: List<PetStorePresenter.PetViewModel> = listOf()
-) : ViewState {
-    enum class StateType {
-        LOADING,
-        DATA_CHANGED,
-        PET_TOO_EXPENSIVE,
-        PET_BOUGHT,
-        PET_CHANGED,
-        SHOW_GEM_STORE
+        isLocked -> {
+            PetStoreViewController.PetViewModel(
+                avatar = avatar,
+                name = androidAvatar.petName,
+                image = androidAvatar.image,
+                price = avatar.gemPrice.toString(),
+                description = androidAvatar.description,
+                actionText = R.string.unlock,
+                moodImage = androidAvatar.moodImage[PetMood.GOOD]!!,
+                showAction = true,
+                showIsCurrent = false,
+                action = PetStoreViewController.PetViewModel.Action.UNLOCK
+            )
+        }
+
+        else -> {
+            PetStoreViewController.PetViewModel(
+                avatar = avatar,
+                name = androidAvatar.petName,
+                image = androidAvatar.image,
+                price = avatar.gemPrice.toString(),
+                description = androidAvatar.description,
+                actionText = R.string.store_buy_pet,
+                moodImage = androidAvatar.moodImage[PetMood.GOOD]!!,
+                showAction = true,
+                showIsCurrent = false,
+                action = PetStoreViewController.PetViewModel.Action.BUY
+            )
+        }
     }
 }
