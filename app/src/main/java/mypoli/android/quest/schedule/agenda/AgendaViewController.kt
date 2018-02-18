@@ -32,10 +32,10 @@ import mypoli.android.timer.TimerViewController
  * on 1/26/18.
  */
 class AgendaViewController(args: Bundle? = null) :
-    ReduxViewController<AgendaAction, AgendaViewState, AgendaPresenter>(args) {
+    ReduxViewController<AgendaAction, AgendaViewState, AgendaReducer>(args) {
 
+    override val reducer = AgendaReducer
 
-    override val presenter get() = AgendaPresenter()
     private lateinit var scrollToPositionListener: RecyclerView.OnScrollListener
 
     override fun onCreateView(
@@ -92,7 +92,7 @@ class AgendaViewController(args: Bundle? = null) :
                 ViewUtils.goneViews(view.topLoader, view.bottomLoader)
                 val agendaList = view.agendaList
                 agendaList.clearOnScrollListeners()
-                (agendaList.adapter as AgendaAdapter).updateAll(state.agendaItems)
+                (agendaList.adapter as AgendaAdapter).updateAll(state.toAgendaItemViewModels())
                 addScrollListeners(agendaList, state)
             }
 
