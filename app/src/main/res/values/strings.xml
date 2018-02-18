@@ -1114,10 +1114,10 @@
     </string-array>
 
     <string-array name="repeating_quest_frequencies">
-        <item>Daily</item>
-        <item>Weekly</item>
-        <item>Monthly</item>
-        <item>Yearly</item>
+        <item>Day</item>
+        <item>Week</item>
+        <item>Month</item>
+        <item>Year</item>
     </string-array>
 
     <string-array name="repeating_quest_flexible_frequencies">
