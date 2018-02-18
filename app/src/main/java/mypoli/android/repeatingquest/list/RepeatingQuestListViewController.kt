@@ -26,10 +26,11 @@ import mypoli.android.player.inventory.GemInventoryViewController
  * on 2/14/18.
  */
 class RepeatingQuestListViewController(args: Bundle? = null) :
-    ReduxViewController<RepeatingQuestListAction, RepeatingQuestListViewState, RepeatingQuestListPresenter>(
+    ReduxViewController<RepeatingQuestListAction, RepeatingQuestListViewState, RepeatingQuestListReducer>(
         args
     ) {
-    override val presenter = RepeatingQuestListPresenter()
+
+    override val reducer = RepeatingQuestListReducer
 
     override fun onCreateView(
         inflater: LayoutInflater,

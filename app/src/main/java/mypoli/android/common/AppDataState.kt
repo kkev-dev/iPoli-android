@@ -34,25 +34,23 @@ object AppDataReducer : Reducer<AppDataState> {
 
     override val key = AppDataState::class.java
 
-    override fun reduce(state: AppState, action: Action) =
-        state.dataState.let {
-            when (action) {
+    override fun reduce(state: AppDataState, action: Action) =
+        when (action) {
 
-                is DataLoadedAction.PlayerChanged -> {
-                    it.copy(
-                        player = action.player
-                    )
-                }
-
-                is DataLoadedAction.TodayQuestsChanged -> {
-                    it.copy(
-                        todayQuests = action.quests
-                    )
-                }
-                else -> it
+            is DataLoadedAction.PlayerChanged -> {
+                state.copy(
+                    player = action.player
+                )
             }
 
+            is DataLoadedAction.TodayQuestsChanged -> {
+                state.copy(
+                    todayQuests = action.quests
+                )
+            }
+            else -> state
         }
+
 
     override fun defaultState(): AppDataState {
         return AppDataState(

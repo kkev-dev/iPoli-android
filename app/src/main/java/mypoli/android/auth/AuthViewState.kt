@@ -1,11 +1,13 @@
 package mypoli.android.auth
 
+import android.content.Context
 import com.google.firebase.auth.FirebaseUser
+import mypoli.android.Constants
+import mypoli.android.R
 import mypoli.android.common.AppState
-import mypoli.android.common.AppStateReducer
+import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.State
 
 /**
  * Created by Polina Zhelyazkova <polina@ipoli.io>
@@ -15,10 +17,10 @@ sealed class AuthAction : Action {
     object Load : AuthAction()
     data class LoadSignUp(val isGuest: Boolean) : AuthAction()
     data class CompleteUserAuth(val user: FirebaseUser, val username: String) : AuthAction()
-    data class SignUp(val username: String, val provider: AuthState.Provider) : AuthAction()
-    data class Login(val provider: AuthState.Provider) : AuthAction()
-    data class UsernameValidationFailed(val error: AuthState.ValidationError) : AuthAction()
-    data class StartSignUp(val provider: AuthState.Provider) : AuthAction()
+    data class SignUp(val username: String, val provider: AuthViewState.Provider) : AuthAction()
+    data class Login(val provider: AuthViewState.Provider) : AuthAction()
+    data class UsernameValidationFailed(val error: AuthViewState.ValidationError) : AuthAction()
+    data class StartSignUp(val provider: AuthViewState.Provider) : AuthAction()
     object AccountsLinked : AuthAction()
     object PlayerCreated : AuthAction()
     object PlayerLoggedIn : AuthAction()
@@ -28,12 +30,126 @@ sealed class AuthAction : Action {
     object GuestPlayerLoggedIn : AuthAction()
 }
 
-data class AuthState(
-    val type: StateType,
+object AuthReducer : UIReducer<AppState, AuthViewState> {
+    override val key = AuthViewState::class.java
+
+    override fun reduce(state: AppState, uiState: AuthViewState, action: Action) =
+        when (action) {
+            is AuthAction.LoadSignUp -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.SHOW_SIGN_UP,
+                    isGuest = action.isGuest
+                )
+            }
+
+            is AuthAction.StartSignUp -> {
+                val type = when (action.provider) {
+                    AuthViewState.Provider.GOOGLE ->
+                        AuthViewState.StateType.GOOGLE_AUTH_STARTED
+
+                    AuthViewState.Provider.FACEBOOK ->
+                        AuthViewState.StateType.FACEBOOK_AUTH_STARTED
+
+                    AuthViewState.Provider.GUEST ->
+                        AuthViewState.StateType.GUEST_AUTH_STARTED
+                }
+
+                uiState.copy(type = type)
+            }
+
+            is AuthAction.UsernameValidationFailed -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.USERNAME_VALIDATION_ERROR,
+                    usernameValidationError = action.error
+                )
+            }
+
+            is AuthAction.Login -> {
+                val type = when (action.provider) {
+                    AuthViewState.Provider.GOOGLE ->
+                        AuthViewState.StateType.GOOGLE_AUTH_STARTED
+
+                    AuthViewState.Provider.FACEBOOK ->
+                        AuthViewState.StateType.FACEBOOK_AUTH_STARTED
+
+                    AuthViewState.Provider.GUEST ->
+                        throw IllegalArgumentException("Guest can't log in")
+                }
+                uiState.copy(
+                    type = type
+                )
+            }
+
+            AuthAction.PlayerCreated -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.PLAYER_CREATED
+                )
+            }
+
+            AuthAction.PlayerLoggedIn -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.PLAYER_LOGGED_IN
+                )
+            }
+
+            AuthAction.GuestPlayerLoggedIn -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.GUEST_PLAYER_LOGGED_IN
+                )
+            }
+
+            AuthAction.SwitchViewType -> {
+                val isLogin = !uiState.isLogin
+
+                val type = if (isLogin)
+                    AuthViewState.StateType.SHOW_LOGIN
+                else
+                    AuthViewState.StateType.SHOW_SIGN_UP
+
+                uiState.copy(
+                    type = type,
+                    isLogin = isLogin
+                )
+            }
+
+            AuthAction.AccountsLinked -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.ACCOUNTS_LINKED
+                )
+            }
+
+            AuthAction.DeleteAccount -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.DELETE_ACCOUNT
+                )
+            }
+
+            AuthAction.SignOutAccount -> {
+                uiState.copy(
+                    type = AuthViewState.StateType.SIGN_OUT_ACCOUNT
+                )
+            }
+
+            else -> uiState
+
+        }
+
+    override fun defaultState() =
+        AuthViewState(
+            type = AuthViewState.StateType.LOADING,
+            usernameValidationError = null,
+            isLogin = false,
+            isGuest = false
+        )
+
+}
+
+data class AuthViewState(
+    val type: AuthViewState.StateType,
     val usernameValidationError: ValidationError?,
-    val isGuest: Boolean,
-    val isLogin: Boolean
-) : State {
+    val isLogin: Boolean,
+    val isGuest: Boolean
+) : ViewState {
     enum class StateType {
         IDLE,
         LOADING,
@@ -65,125 +181,16 @@ data class AuthState(
     }
 }
 
-object AuthReducer : AppStateReducer<AuthState> {
-    override fun reduce(state: AppState, action: Action): AuthState {
-
-        val authState = state.authState
-
-        return when (action) {
-            is AuthAction.LoadSignUp -> {
-                authState.copy(
-                    type = AuthState.StateType.SHOW_SIGN_UP,
-                    isGuest = action.isGuest
-                )
-            }
-
-            is AuthAction.StartSignUp -> {
-                val type = when (action.provider) {
-                    AuthState.Provider.GOOGLE ->
-                        AuthState.StateType.GOOGLE_AUTH_STARTED
-
-                    AuthState.Provider.FACEBOOK ->
-                        AuthState.StateType.FACEBOOK_AUTH_STARTED
-
-                    AuthState.Provider.GUEST ->
-                        AuthState.StateType.GUEST_AUTH_STARTED
-                }
-
-                return authState.copy(type = type)
-            }
-
-            is AuthAction.UsernameValidationFailed -> {
-                authState.copy(
-                    type = AuthState.StateType.USERNAME_VALIDATION_ERROR,
-                    usernameValidationError = action.error
-                )
-            }
-
-            is AuthAction.Login -> {
-                val type = when (action.provider) {
-                    AuthState.Provider.GOOGLE ->
-                        AuthState.StateType.GOOGLE_AUTH_STARTED
-
-                    AuthState.Provider.FACEBOOK ->
-                        AuthState.StateType.FACEBOOK_AUTH_STARTED
-
-                    AuthState.Provider.GUEST ->
-                        throw IllegalArgumentException("Guest can't log in")
-                }
-                authState.copy(
-                    type = type
-                )
-            }
-
-            AuthAction.PlayerCreated -> {
-                authState.copy(
-                    type = AuthState.StateType.PLAYER_CREATED
-                )
-            }
-
-            AuthAction.PlayerLoggedIn -> {
-                authState.copy(
-                    type = AuthState.StateType.PLAYER_LOGGED_IN
-                )
-            }
-
-            AuthAction.GuestPlayerLoggedIn -> {
-                authState.copy(
-                    type = AuthState.StateType.GUEST_PLAYER_LOGGED_IN
-                )
-            }
-
-            AuthAction.SwitchViewType -> {
-                val isLogin = !authState.isLogin
-
-                val type = if (isLogin)
-                    AuthState.StateType.SHOW_LOGIN
-                else
-                    AuthState.StateType.SHOW_SIGN_UP
-
-                authState.copy(
-                    type = type,
-                    isLogin = isLogin
-                )
-            }
-
-            AuthAction.AccountsLinked -> {
-                authState.copy(
-                    type = AuthState.StateType.ACCOUNTS_LINKED
-                )
-            }
-
-            AuthAction.DeleteAccount -> {
-                authState.copy(
-                    type = AuthState.StateType.DELETE_ACCOUNT
-                )
-            }
-
-            AuthAction.SignOutAccount-> {
-                authState.copy(
-                    type = AuthState.StateType.SIGN_OUT_ACCOUNT
-                )
-            }
-
-            else -> authState
+fun AuthViewState.usernameErrorMessage(context: Context) =
+    usernameValidationError?.let {
+        when (it) {
+            AuthViewState.ValidationError.EMPTY_USERNAME -> context.getString(R.string.username_is_empty)
+            AuthViewState.ValidationError.EXISTING_USERNAME -> context.getString(R.string.username_is_taken)
+            AuthViewState.ValidationError.INVALID_FORMAT -> context.getString(R.string.username_wrong_format)
+            AuthViewState.ValidationError.INVALID_LENGTH -> context.getString(
+                R.string.username_wrong_length,
+                Constants.USERNAME_MIN_LENGTH,
+                Constants.USERNAME_MAX_LENGTH
+            )
         }
-
     }
-
-    override fun defaultState() =
-        AuthState(
-            type = AuthState.StateType.LOADING,
-            usernameValidationError = null,
-            isLogin = false,
-            isGuest = false
-        )
-
-}
-
-data class AuthViewState(
-    val type: AuthState.StateType,
-    val usernameErrorMessage: String? = null,
-    val isLogin: Boolean,
-    val showGuestSignUp: Boolean
-) : ViewState

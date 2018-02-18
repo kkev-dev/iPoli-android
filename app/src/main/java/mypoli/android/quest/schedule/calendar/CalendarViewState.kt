@@ -17,9 +17,13 @@ object CalendarReducer : UIReducer<AppState, CalendarViewState> {
     override val key: Class<CalendarViewState>
         get() = CalendarViewState::class.java
 
-    override fun reduce(state: AppState, action: Action): CalendarViewState {
+    override fun reduce(
+        state: AppState,
+        uiState: CalendarViewState,
+        action: Action
+    ): CalendarViewState {
 
-        val calendarState = state.stateFor(key)
+        val calendarState = uiState
             .copy(currentDate = state.stateFor(ScheduleViewState::class.java).currentDate)
 
         return when (action) {

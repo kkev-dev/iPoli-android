@@ -1,6 +1,5 @@
 package mypoli.android.player.inventory
 
-import android.content.Context
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -8,9 +7,9 @@ import android.view.ViewGroup
 import android.widget.TextView
 import mypoli.android.R
 import mypoli.android.common.AppState
+import mypoli.android.common.UIReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.android.AndroidStatePresenter
 import mypoli.android.common.redux.android.ReduxViewController
 import mypoli.android.common.view.CurrencyConverterDialogController
 
@@ -19,19 +18,29 @@ import mypoli.android.common.view.CurrencyConverterDialogController
  * on 01/28/2018.
  */
 
-class GemInventoryPresenter : AndroidStatePresenter<AppState, GemInventoryViewState> {
-    override fun present(state: AppState, context: Context) =
-        GemInventoryViewState(state.appDataState.player?.gems.toString())
+data class GemInventoryViewState(val gems: Int) : ViewState
+
+object GemInventoryReducer : UIReducer<AppState, GemInventoryViewState> {
+
+    override fun reduce(
+        state: AppState,
+        uiState: GemInventoryViewState,
+        action: Action
+    ) = GemInventoryViewState(gems = state.dataState.player?.gems ?: 0)
+
+    override fun defaultState() = GemInventoryViewState(0)
+
+    override val key = GemInventoryViewState::class.java
+
 }
 
-data class GemInventoryViewState(val gems: String) : ViewState
-
 class GemInventoryViewController :
-    ReduxViewController<Action, GemInventoryViewState, GemInventoryPresenter> {
+    ReduxViewController<Action, GemInventoryViewState, GemInventoryReducer> {
 
     private var showCurrencyConverter: Boolean = true
 
-    override val presenter get() = GemInventoryPresenter()
+
+    override val reducer = GemInventoryReducer
 
     constructor(args: Bundle? = null) : super(args)
 
@@ -59,6 +68,6 @@ class GemInventoryViewController :
     }
 
     override fun render(state: GemInventoryViewState, view: View) {
-        (view as TextView).text = state.gems
+        (view as TextView).text = state.gems.toString()
     }
 }

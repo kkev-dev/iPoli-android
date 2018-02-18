@@ -36,11 +36,11 @@ import mypoli.android.home.HomeViewController
  * on 2/5/18.
  */
 class AuthViewController(args: Bundle? = null) :
-    ReduxViewController<AuthAction, AuthViewState, AuthPresenter>(args) {
+    ReduxViewController<AuthAction, AuthViewState, AuthReducer>(args) {
 
     private val RC_SIGN_IN = 123
 
-    override val presenter = AuthPresenter()
+    override val reducer = AuthReducer
 
     private var loader: LoaderDialogController? = null
 
@@ -74,11 +74,11 @@ class AuthViewController(args: Bundle? = null) :
     override fun render(state: AuthViewState, view: View) {
         when (state.type) {
 
-            AuthState.StateType.LOADING -> {
+            AuthViewState.StateType.LOADING -> {
                 // show loading
             }
 
-            AuthState.StateType.SHOW_SIGN_UP -> {
+            AuthViewState.StateType.SHOW_SIGN_UP -> {
 
                 if (view.loginContainer.visible) {
                     playShowSignUpAnimation(view, {
@@ -92,7 +92,7 @@ class AuthViewController(args: Bundle? = null) :
                     dispatch(
                         AuthAction.SignUp(
                             view.username.text.toString(),
-                            AuthState.Provider.GOOGLE
+                            AuthViewState.Provider.GOOGLE
                         )
                     )
                 }
@@ -100,7 +100,7 @@ class AuthViewController(args: Bundle? = null) :
                     dispatch(
                         AuthAction.SignUp(
                             view.username.text.toString(),
-                            AuthState.Provider.FACEBOOK
+                            AuthViewState.Provider.FACEBOOK
                         )
                     )
                 }
@@ -109,13 +109,13 @@ class AuthViewController(args: Bundle? = null) :
                     dispatch(
                         AuthAction.SignUp(
                             view.username.text.toString(),
-                            AuthState.Provider.GUEST
+                            AuthViewState.Provider.GUEST
                         )
                     )
                 }
             }
 
-            AuthState.StateType.SHOW_LOGIN -> {
+            AuthViewState.StateType.SHOW_LOGIN -> {
                 playShowLoginAnimation(view, {
                     view.signUpContainer.visibility = View.INVISIBLE
                     view.signUpPet.visible = false
@@ -126,20 +126,20 @@ class AuthViewController(args: Bundle? = null) :
                 view.googleLogin.setOnClickListener {
                     dispatch(
                         AuthAction.Login(
-                            AuthState.Provider.GOOGLE
+                            AuthViewState.Provider.GOOGLE
                         )
                     )
                 }
                 view.facebookLogin.setOnClickListener {
                     dispatch(
                         AuthAction.Login(
-                            AuthState.Provider.FACEBOOK
+                            AuthViewState.Provider.FACEBOOK
                         )
                     )
                 }
             }
 
-            AuthState.StateType.GOOGLE_AUTH_STARTED -> {
+            AuthViewState.StateType.GOOGLE_AUTH_STARTED -> {
                 showLoader()
                 startActivityForResult(
                     startSignUpForProvider(AuthUI.IdpConfig.GoogleBuilder().build()),
@@ -147,7 +147,7 @@ class AuthViewController(args: Bundle? = null) :
                 )
             }
 
-            AuthState.StateType.FACEBOOK_AUTH_STARTED -> {
+            AuthViewState.StateType.FACEBOOK_AUTH_STARTED -> {
                 showLoader()
                 startActivityForResult(
                     startSignUpForProvider(AuthUI.IdpConfig.FacebookBuilder().build()),
@@ -155,7 +155,7 @@ class AuthViewController(args: Bundle? = null) :
                 )
             }
 
-            AuthState.StateType.GUEST_AUTH_STARTED -> {
+            AuthViewState.StateType.GUEST_AUTH_STARTED -> {
                 showLoader()
                 FirebaseAuth.getInstance().signInAnonymously().addOnCompleteListener {
                     if (it.isSuccessful) {
@@ -173,34 +173,34 @@ class AuthViewController(args: Bundle? = null) :
                 }
             }
 
-            AuthState.StateType.USERNAME_VALIDATION_ERROR -> {
+            AuthViewState.StateType.USERNAME_VALIDATION_ERROR -> {
                 hideLoader()
-                view.username.error = state.usernameErrorMessage!!
+                view.username.error = state.usernameErrorMessage(activity!!)
             }
 
-            AuthState.StateType.PLAYER_CREATED -> {
+            AuthViewState.StateType.PLAYER_CREATED -> {
                 hideLoader()
                 startHomeViewController()
             }
 
-            AuthState.StateType.PLAYER_LOGGED_IN -> {
+            AuthViewState.StateType.PLAYER_LOGGED_IN -> {
                 hideLoader()
                 showShortToast(R.string.welcome_hero)
                 startHomeViewController()
             }
 
-            AuthState.StateType.GUEST_PLAYER_LOGGED_IN -> {
+            AuthViewState.StateType.GUEST_PLAYER_LOGGED_IN -> {
                 hideLoader()
                 showShortToast(R.string.welcome_hero)
                 rootRouter.popCurrentController()
             }
 
-            AuthState.StateType.ACCOUNTS_LINKED -> {
+            AuthViewState.StateType.ACCOUNTS_LINKED -> {
                 hideLoader()
                 rootRouter.popCurrentController()
             }
 
-            AuthState.StateType.DELETE_ACCOUNT -> {
+            AuthViewState.StateType.DELETE_ACCOUNT -> {
                 AuthUI.getInstance()
                     .delete(view.context.applicationContext)
                     .addOnCompleteListener { task ->
@@ -215,7 +215,7 @@ class AuthViewController(args: Bundle? = null) :
                     }
             }
 
-            AuthState.StateType.SIGN_OUT_ACCOUNT -> {
+            AuthViewState.StateType.SIGN_OUT_ACCOUNT -> {
                 AuthUI.getInstance()
                     .signOut(view.context.applicationContext)
                     .addOnCompleteListener { task ->
@@ -262,10 +262,10 @@ class AuthViewController(args: Bundle? = null) :
 
     private fun renderSighUpViews(view: View, state: AuthViewState) {
         view.loginContainer.visibility = View.INVISIBLE
-        if (state.showGuestSignUp)
-            view.guestGroup.showViews()
-        else
+        if (state.isGuest)
             view.guestGroup.goneViews()
+        else
+            view.guestGroup.showViews()
         view.signUpPet.visible = true
         view.loginPet.visible = false
         view.signUpHeadline.setText(R.string.welcome_hero)

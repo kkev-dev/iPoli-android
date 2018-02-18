@@ -18,15 +18,18 @@ sealed class LoadDataAction : Action {
 }
 
 sealed class UIAction : Action {
-    data class Attach(val reducer: UIReducer<*,*>) : UIAction()
+    data class Attach(val reducer: UIReducer<*, *>) : UIAction()
 
     data class Detach(val reducer: UIReducer<*, *>) : UIAction()
 }
 
 //interface UIState
 
-interface UIReducer<S: CombinedState<S>, VS : ViewState> {
-    fun reduce(state: S, action: Action): VS
+interface UIReducer<S : CombinedState<S>, VS : ViewState> {
+    fun reduce(state: S, action: Action) =
+        reduce(state, state.stateFor(key), action)
+
+    fun reduce(state: S, uiState: VS, action: Action): VS
 
     fun defaultState(): VS
 

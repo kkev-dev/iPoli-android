@@ -171,8 +171,6 @@ data class ScheduleViewState(
     val level: Int = 0,
     val coins: Int = 0,
     val viewMode: ViewMode
-//    val viewModeIcon: Int,
-//    val viewModeTitle: String
 ) : ViewState {
 
     enum class StateType {

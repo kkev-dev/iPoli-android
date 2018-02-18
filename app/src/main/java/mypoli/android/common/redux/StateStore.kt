@@ -46,7 +46,7 @@ abstract class CombinedState<T>(
 
 interface Reducer<S : State> {
 
-    fun reduce(state: State, action: Action): S
+    fun reduce(state: S, action: Action): S
 
     fun defaultState(): S
 
@@ -91,12 +91,12 @@ class StateStore<S : CombinedState<S>>(
         }
     }
 
-    fun <T> subscribe(subscriber: StateChangeSubscriber<S>) {
+    fun subscribe(subscriber: StateChangeSubscriber<S>) {
         stateChangeSubscribers.add(subscriber)
         subscriber.onStateChanged(state)
     }
 
-    fun <T> unsubscribe(subscriber: StateChangeSubscriber<S>) {
+    fun unsubscribe(subscriber: StateChangeSubscriber<S>) {
         stateChangeSubscribers.remove(subscriber)
     }
 

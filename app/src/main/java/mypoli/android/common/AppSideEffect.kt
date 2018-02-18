@@ -187,7 +187,7 @@ class AgendaSideEffect : SideEffect<AppState>, Injects<Module> {
                 listenForAgendaItems(start, end, dispatcher, agendaDate, false)
             }
             is LoadDataAction.All -> {
-                val agendaDate = state.appDataState.today
+                val agendaDate = state.dataState.today
                 val pair = findAllAgendaDates(agendaDate)
                 val start = pair.first
                 val end = pair.second
@@ -313,10 +313,10 @@ class LoadAllDataSideEffect : SideEffect<AppState>, Injects<Module> {
         launch(UI) {
             scheduledQuestsChannel?.cancel()
             scheduledQuestsChannel =
-                questRepository.listenForScheduledAt(state.appDataState.today)
+                questRepository.listenForScheduledAt(state.dataState.today)
             scheduledQuestsChannel!!.consumeEach {
 
-                questRepository.listenForScheduledAt(state.appDataState.today).consumeEach {
+                questRepository.listenForScheduledAt(state.dataState.today).consumeEach {
 
                     updateWidgets()
                     dispatcher.dispatch(DataLoadedAction.TodayQuestsChanged(it))

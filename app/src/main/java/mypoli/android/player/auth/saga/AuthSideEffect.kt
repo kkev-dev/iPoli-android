@@ -7,7 +7,7 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import mypoli.android.Constants
 import mypoli.android.auth.AuthAction
-import mypoli.android.auth.AuthState
+import mypoli.android.auth.AuthViewState
 import mypoli.android.common.AppSideEffect
 import mypoli.android.common.AppState
 import mypoli.android.common.LoadDataAction
@@ -44,11 +44,12 @@ class AuthSideEffect : AppSideEffect {
                 val username = action.username
 
                 val metadata = user.metadata
-                val isNewUser = metadata == null || metadata.creationTimestamp == metadata.lastSignInTimestamp
+                val isNewUser =
+                    metadata == null || metadata.creationTimestamp == metadata.lastSignInTimestamp
 
-                if (state.authState.isLogin) {
+                if (state.stateFor(AuthViewState::class.java).isLogin) {
                     when {
-                        !isNewUser && playerRepository.hasPlayer() ->{
+                        !isNewUser && playerRepository.hasPlayer() -> {
                             //TODO: delete anonymous account
                             val anonymousPlayerId =
                                 sharedPreferences.getString(Constants.KEY_PLAYER_ID, null)
@@ -84,7 +85,7 @@ class AuthSideEffect : AppSideEffect {
                 val username = action.username
 
                 when (action.provider) {
-                    AuthState.Provider.FACEBOOK -> {
+                    AuthViewState.Provider.FACEBOOK -> {
                         val usernameValidationError =
                             findUsernameValidationError(username, playerRepository)
                         if (usernameValidationError != null) {
@@ -96,10 +97,10 @@ class AuthSideEffect : AppSideEffect {
                             return
                         }
 
-                        dispatcher.dispatch(AuthAction.StartSignUp(AuthState.Provider.FACEBOOK))
+                        dispatcher.dispatch(AuthAction.StartSignUp(AuthViewState.Provider.FACEBOOK))
                     }
 
-                    AuthState.Provider.GOOGLE -> {
+                    AuthViewState.Provider.GOOGLE -> {
                         val usernameValidationError =
                             findUsernameValidationError(username, playerRepository)
                         if (usernameValidationError != null) {
@@ -111,11 +112,11 @@ class AuthSideEffect : AppSideEffect {
                             return
                         }
 
-                        dispatcher.dispatch(AuthAction.StartSignUp(AuthState.Provider.GOOGLE))
+                        dispatcher.dispatch(AuthAction.StartSignUp(AuthViewState.Provider.GOOGLE))
                     }
 
-                    AuthState.Provider.GUEST -> {
-                        dispatcher.dispatch(AuthAction.StartSignUp(AuthState.Provider.GUEST))
+                    AuthViewState.Provider.GUEST -> {
+                        dispatcher.dispatch(AuthAction.StartSignUp(AuthViewState.Provider.GUEST))
                     }
                 }
             }
@@ -236,28 +237,28 @@ class AuthSideEffect : AppSideEffect {
     private fun findUsernameValidationError(
         username: String,
         playerRepository: PlayerRepository
-    ): AuthState.ValidationError? {
+    ): AuthViewState.ValidationError? {
 
         if (username.trim().isEmpty()) {
-            return AuthState.ValidationError.EMPTY_USERNAME
+            return AuthViewState.ValidationError.EMPTY_USERNAME
         }
 
         if (username.length < Constants.USERNAME_MIN_LENGTH || username.length > Constants.USERNAME_MAX_LENGTH) {
-            return AuthState.ValidationError.INVALID_LENGTH
+            return AuthViewState.ValidationError.INVALID_LENGTH
         }
 
         val asciiEncoder = Charset.forName("US-ASCII").newEncoder()
         if (!asciiEncoder.canEncode(username)) {
-            return AuthState.ValidationError.INVALID_FORMAT
+            return AuthViewState.ValidationError.INVALID_FORMAT
         }
 
         val p = Pattern.compile("^\\w+$")
         if (!p.matcher(username).matches()) {
-            return AuthState.ValidationError.INVALID_FORMAT
+            return AuthViewState.ValidationError.INVALID_FORMAT
         }
 
         if (!playerRepository.isUsernameAvailable(username)) {
-            return AuthState.ValidationError.EXISTING_USERNAME
+            return AuthViewState.ValidationError.EXISTING_USERNAME
         }
 
         return null

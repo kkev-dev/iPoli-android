@@ -33,7 +33,7 @@ import org.json.JSONObject
  * on 8/19/17.
  */
 class HomeViewController(args: Bundle? = null) :
-    ReduxViewController<HomeAction, HomeViewState, HomePresenter>(args),
+    ReduxViewController<HomeAction, HomeViewState, HomeReducer>(args),
     NavigationView.OnNavigationItemSelectedListener {
 
 
@@ -41,7 +41,7 @@ class HomeViewController(args: Bundle? = null) :
     private lateinit var drawerLayout: DrawerLayout
     private var navigationItemSelected: MenuItem? = null
 
-    override val presenter = HomePresenter()
+    override val reducer = HomeReducer
 
     private var showSignIn = true
 
