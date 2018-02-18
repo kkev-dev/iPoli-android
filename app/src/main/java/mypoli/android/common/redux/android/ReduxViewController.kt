@@ -32,6 +32,7 @@ abstract class ReduxViewController<A : Action, VS : ViewState, out R : ViewState
 
     protected abstract val reducer: R
 
+    @Volatile
     private var currentState: VS? = null
 
     override fun onContextAvailable(context: Context) {
