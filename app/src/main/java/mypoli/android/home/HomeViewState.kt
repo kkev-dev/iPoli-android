@@ -1,7 +1,7 @@
 package mypoli.android.home
 
 import mypoli.android.common.AppState
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 
@@ -11,7 +11,7 @@ import mypoli.android.common.redux.Action
  */
 sealed class HomeAction : Action
 
-object HomeReducer : UIReducer<AppState, HomeViewState> {
+object HomeReducer : ViewStateReducer<AppState, HomeViewState> {
     override fun reduce(state: AppState, subState: HomeViewState, action: Action): HomeViewState {
         val player = state.dataState.player
         return subState.copy(

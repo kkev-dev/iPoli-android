@@ -4,7 +4,7 @@ import android.content.Context
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.common.text.CalendarFormatter
@@ -31,7 +31,7 @@ sealed class ScheduleAction : Action {
     object ToggleViewMode : ScheduleAction()
 }
 
-object ScheduleReducer : UIReducer<AppState, ScheduleViewState> {
+object ScheduleReducer : ViewStateReducer<AppState, ScheduleViewState> {
     override val key = ScheduleViewState::class.java
 
     override fun defaultState() =

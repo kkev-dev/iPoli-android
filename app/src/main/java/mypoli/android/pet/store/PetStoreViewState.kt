@@ -3,7 +3,7 @@ package mypoli.android.pet.store
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.pet.AndroidPetAvatar
@@ -27,7 +27,7 @@ sealed class PetStoreAction : Action {
     object PetTooExpensive : PetStoreAction()
 }
 
-object PetStoreReducer : UIReducer<AppState, PetStoreViewState> {
+object PetStoreReducer : ViewStateReducer<AppState, PetStoreViewState> {
 
     override fun reduce(
         state: AppState,

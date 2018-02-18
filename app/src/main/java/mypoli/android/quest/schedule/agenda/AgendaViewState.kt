@@ -4,7 +4,7 @@ import com.mikepenz.ionicons_typeface_library.Ionicons
 import mypoli.android.R
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.datetime.isBetween
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
@@ -48,7 +48,7 @@ data class AgendaState(
     }
 }
 
-object AgendaReducer : UIReducer<AppState, AgendaViewState> {
+object AgendaReducer : ViewStateReducer<AppState, AgendaViewState> {
 
     override val key = AgendaViewState::class.java
 

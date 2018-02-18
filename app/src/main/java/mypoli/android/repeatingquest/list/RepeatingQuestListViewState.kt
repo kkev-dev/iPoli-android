@@ -1,7 +1,7 @@
 package mypoli.android.repeatingquest.list
 
 import mypoli.android.common.AppState
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 
@@ -12,7 +12,7 @@ import mypoli.android.common.redux.Action
 sealed class RepeatingQuestListAction : Action
 
 
-object RepeatingQuestListReducer : UIReducer<AppState, RepeatingQuestListViewState> {
+object RepeatingQuestListReducer : ViewStateReducer<AppState, RepeatingQuestListViewState> {
 
     override fun reduce(
         state: AppState,

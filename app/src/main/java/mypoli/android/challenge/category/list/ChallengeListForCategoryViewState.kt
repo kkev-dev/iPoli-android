@@ -5,7 +5,7 @@ import mypoli.android.challenge.data.Challenge
 import mypoli.android.challenge.data.PredefinedChallenge
 import mypoli.android.common.AppState
 import mypoli.android.common.DataLoadedAction
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 
@@ -30,7 +30,7 @@ sealed class ChallengeListForCategoryAction : Action {
 }
 
 object ChallengeListForCategoryReducer :
-    UIReducer<AppState, ChallengeListForCategoryViewState> {
+    ViewStateReducer<AppState, ChallengeListForCategoryViewState> {
     override fun reduce(
         state: AppState,
         subState: ChallengeListForCategoryViewState,

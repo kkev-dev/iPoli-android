@@ -2,6 +2,7 @@ package mypoli.android.common.redux
 
 import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.UIAction
+import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.MiddleWare.Result.Continue
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.coroutines.experimental.CoroutineContext
@@ -80,6 +81,8 @@ interface Reducer<AS : CombinedState<AS>, S : State> {
 
     val key: Class<S>
 }
+
+interface ViewStateReducer<S : CombinedState<S>, VS : ViewState> : Reducer<S, VS>
 
 interface Dispatcher {
     fun <A : Action> dispatch(action: A)

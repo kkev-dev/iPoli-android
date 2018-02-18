@@ -1,7 +1,7 @@
 package mypoli.android.quest.schedule.calendar
 
 import mypoli.android.common.AppState
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.quest.schedule.ScheduleAction
@@ -13,7 +13,7 @@ import org.threeten.bp.LocalDate
  * on 01/31/2018.
  */
 
-object CalendarReducer : UIReducer<AppState, CalendarViewState> {
+object CalendarReducer : ViewStateReducer<AppState, CalendarViewState> {
     override val key: Class<CalendarViewState>
         get() = CalendarViewState::class.java
 

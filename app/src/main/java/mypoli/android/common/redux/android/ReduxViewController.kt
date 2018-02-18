@@ -9,7 +9,7 @@ import kotlinx.coroutines.experimental.android.UI
 import kotlinx.coroutines.experimental.launch
 import mypoli.android.common.AppState
 import mypoli.android.common.UIAction
-import mypoli.android.common.UIReducer
+import mypoli.android.common.ViewStateReducer
 import mypoli.android.common.di.Module
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
@@ -23,7 +23,7 @@ import space.traversal.kapsule.required
  * Created by Venelin Valkov <venelin@mypoli.fun>
  * on 1/18/18.
  */
-abstract class ReduxViewController<in A : Action, VS : ViewState, out R : UIReducer<AppState, VS>> protected constructor(
+abstract class ReduxViewController<in A : Action, VS : ViewState, out R : ViewStateReducer<AppState, VS>> protected constructor(
     args: Bundle? = null
 ) :
     RestoreViewOnCreateController(args), Injects<Module>,
