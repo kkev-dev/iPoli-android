@@ -3,6 +3,7 @@ package mypoli.android.common
 import mypoli.android.common.mvi.ViewState
 import mypoli.android.common.redux.Action
 import mypoli.android.common.redux.CombinedState
+import mypoli.android.common.redux.Reducer
 import mypoli.android.common.redux.State
 
 /**
@@ -25,16 +26,7 @@ sealed class UIAction : Action {
 
 //interface UIState
 
-interface UIReducer<S : CombinedState<S>, VS : ViewState> {
-    fun reduce(state: S, action: Action) =
-        reduce(state, state.stateFor(key), action)
-
-    fun reduce(state: S, uiState: VS, action: Action): VS
-
-    fun defaultState(): VS
-
-    val key: Class<VS>
-}
+interface UIReducer<S : CombinedState<S>, VS : ViewState> : Reducer<S, VS>
 
 class AppState(
     data: Map<Class<*>, State> = mapOf(

@@ -30,27 +30,25 @@ data class AppDataState(
     val todayQuests: List<Quest>
 ) : State
 
-object AppDataReducer : Reducer<AppDataState> {
-
-    override val key = AppDataState::class.java
-
-    override fun reduce(state: AppDataState, action: Action) =
+object AppDataReducer : Reducer<AppState, AppDataState> {
+    override fun reduce(state: AppState, subState: AppDataState, action: Action) =
         when (action) {
 
             is DataLoadedAction.PlayerChanged -> {
-                state.copy(
+                subState.copy(
                     player = action.player
                 )
             }
 
             is DataLoadedAction.TodayQuestsChanged -> {
-                state.copy(
+                subState.copy(
                     todayQuests = action.quests
                 )
             }
-            else -> state
+            else -> subState
         }
 
+    override val key = AppDataState::class.java
 
     override fun defaultState(): AppDataState {
         return AppDataState(

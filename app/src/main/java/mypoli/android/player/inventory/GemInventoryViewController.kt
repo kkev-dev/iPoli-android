@@ -24,7 +24,7 @@ object GemInventoryReducer : UIReducer<AppState, GemInventoryViewState> {
 
     override fun reduce(
         state: AppState,
-        uiState: GemInventoryViewState,
+        subState: GemInventoryViewState,
         action: Action
     ) = GemInventoryViewState(gems = state.dataState.player?.gems ?: 0)
 

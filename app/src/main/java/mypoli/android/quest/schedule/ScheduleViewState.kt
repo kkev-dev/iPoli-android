@@ -11,6 +11,7 @@ import mypoli.android.common.text.CalendarFormatter
 import mypoli.android.quest.schedule.agenda.AgendaAction
 import mypoli.android.quest.schedule.agenda.AgendaViewState
 import mypoli.android.quest.schedule.calendar.CalendarAction
+import mypoli.android.quest.schedule.calendar.CalendarViewState
 import org.threeten.bp.LocalDate
 import org.threeten.bp.YearMonth
 import org.threeten.bp.format.DateTimeFormatter
@@ -42,26 +43,26 @@ object ScheduleReducer : UIReducer<AppState, ScheduleViewState> {
             datePickerState = ScheduleViewState.DatePickerState.INVISIBLE
         )
 
-    override fun reduce(state: AppState, uiState: ScheduleViewState, action: Action) =
+    override fun reduce(state: AppState, subState: ScheduleViewState, action: Action) =
         when (action) {
             is DataLoadedAction.PlayerChanged -> reducePlayerChanged(
-                uiState,
+                subState,
                 action
             )
             is ScheduleAction -> reduceCalendarAction(
-                uiState,
+                subState,
                 action
             )
             is CalendarAction.SwipeChangeDate -> {
-                val currentPos = state.calendarState.adapterPosition
+                val currentPos = state.stateFor(CalendarViewState::class.java).adapterPosition
                 val newPos = action.adapterPosition
-                val curDate = uiState.currentDate
+                val curDate = subState.currentDate
                 val newDate = if (newPos < currentPos)
                     curDate.minusDays(1)
                 else
                     curDate.plusDays(1)
 
-                uiState.copy(
+                subState.copy(
                     type = ScheduleViewState.StateType.SWIPE_DATE_CHANGED,
                     currentDate = newDate
                 )
@@ -72,12 +73,12 @@ object ScheduleReducer : UIReducer<AppState, ScheduleViewState> {
                 val startDate =
                     state.stateFor(AgendaViewState::class.java).agendaItems[itemPos].startDate()
 
-                if (uiState.currentDate.isEqual(startDate)) {
-                    uiState.copy(
+                if (subState.currentDate.isEqual(startDate)) {
+                    subState.copy(
                         type = ScheduleViewState.StateType.IDLE
                     )
                 } else {
-                    uiState.copy(
+                    subState.copy(
                         type = ScheduleViewState.StateType.DATE_AUTO_CHANGED,
                         currentDate = startDate,
                         currentMonth = YearMonth.of(startDate.year, startDate.month)
@@ -85,7 +86,7 @@ object ScheduleReducer : UIReducer<AppState, ScheduleViewState> {
                 }
 
             }
-            else -> uiState
+            else -> subState
         }
 
     private fun reducePlayerChanged(

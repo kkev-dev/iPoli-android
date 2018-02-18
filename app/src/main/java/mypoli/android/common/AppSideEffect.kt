@@ -18,11 +18,14 @@ import mypoli.android.pet.usecase.BuyPetUseCase
 import mypoli.android.player.Player
 import mypoli.android.quest.Quest
 import mypoli.android.quest.schedule.ScheduleAction
+import mypoli.android.quest.schedule.ScheduleViewState
 import mypoli.android.quest.schedule.agenda.AgendaAction
 import mypoli.android.quest.schedule.agenda.AgendaReducer
+import mypoli.android.quest.schedule.agenda.AgendaViewState
 import mypoli.android.quest.schedule.agenda.usecase.CreateAgendaItemsUseCase
 import mypoli.android.quest.schedule.agenda.usecase.FindAgendaDatesUseCase
 import mypoli.android.quest.schedule.calendar.CalendarAction
+import mypoli.android.quest.schedule.calendar.CalendarViewState
 import mypoli.android.quest.usecase.CompleteQuestUseCase.Params.WithQuest
 import org.threeten.bp.LocalDate
 import space.traversal.kapsule.Injects
@@ -105,42 +108,10 @@ class BuyPetSideEffect : SideEffect<AppState>, Injects<Module> {
     override fun canHandle(action: Action) = action is PetStoreAction.BuyPet
 }
 
-class CompleteQuestSideEffect : SideEffect<AppState>, Injects<Module> {
-
-    private val completeQuestUseCase by required { completeQuestUseCase }
-
-    override suspend fun execute(action: Action, state: AppState, dispatcher: Dispatcher) {
-        inject(myPoliApp.module(myPoliApp.instance))
-        if (action is AgendaAction.CompleteQuest) {
-            val adapterPos = action.itemPosition
-            val questItem =
-                state.agendaState.agendaItems[adapterPos] as CreateAgendaItemsUseCase.AgendaItem.QuestItem
-            completeQuestUseCase.execute(WithQuest(questItem.quest))
-        }
-    }
-
-    override fun canHandle(action: Action) = action is AgendaAction.CompleteQuest
-}
-
-class UndoCompletedQuestSideEffect : SideEffect<AppState>, Injects<Module> {
-
-    private val undoCompletedQuestUseCase by required { undoCompletedQuestUseCase }
-
-    override suspend fun execute(action: Action, state: AppState, dispatcher: Dispatcher) {
-        inject(myPoliApp.module(myPoliApp.instance))
-        if (action is AgendaAction.UndoCompleteQuest) {
-            val adapterPos = action.itemPosition
-            val questItem =
-                state.agendaState.agendaItems[adapterPos] as CreateAgendaItemsUseCase.AgendaItem.QuestItem
-            undoCompletedQuestUseCase.execute(questItem.quest.id)
-        }
-    }
-
-    override fun canHandle(action: Action) = action is AgendaAction.UndoCompleteQuest
-}
-
 class AgendaSideEffect : SideEffect<AppState>, Injects<Module> {
 
+    private val completeQuestUseCase by required { completeQuestUseCase }
+    private val undoCompletedQuestUseCase by required { undoCompletedQuestUseCase }
     private val findAgendaDatesUseCase by required { findAgendaDatesUseCase }
     private val createAgendaItemsUseCase by required { createAgendaItemsUseCase }
     private val questRepository by required { questRepository }
@@ -150,10 +121,9 @@ class AgendaSideEffect : SideEffect<AppState>, Injects<Module> {
     override suspend fun execute(action: Action, state: AppState, dispatcher: Dispatcher) {
         inject(myPoliApp.module(myPoliApp.instance))
 
-        val agendaItems = state.agendaState.agendaItems
-
         when (action) {
             is AgendaAction.LoadBefore -> {
+                val agendaItems = state.stateFor(AgendaViewState::class.java).agendaItems
                 val position = action.itemPosition
                 val agendaItem = agendaItems[position]
                 val agendaDate = agendaItem.startDate()
@@ -172,6 +142,7 @@ class AgendaSideEffect : SideEffect<AppState>, Injects<Module> {
                 listenForAgendaItems(start, end, dispatcher, agendaDate, false)
             }
             is AgendaAction.LoadAfter -> {
+                val agendaItems = state.stateFor(AgendaViewState::class.java).agendaItems
                 val position = action.itemPosition
                 val agendaItem = agendaItems[position]
                 val agendaDate = agendaItem.startDate()
@@ -186,6 +157,23 @@ class AgendaSideEffect : SideEffect<AppState>, Injects<Module> {
 
                 listenForAgendaItems(start, end, dispatcher, agendaDate, false)
             }
+
+            is AgendaAction.CompleteQuest -> {
+                val adapterPos = action.itemPosition
+                val agendaState = state.stateFor(AgendaViewState::class.java)
+                val questItem =
+                    agendaState.agendaItems[adapterPos] as CreateAgendaItemsUseCase.AgendaItem.QuestItem
+                completeQuestUseCase.execute(WithQuest(questItem.quest))
+            }
+
+            is AgendaAction.UndoCompleteQuest -> {
+                val agendaItems = state.stateFor(AgendaViewState::class.java).agendaItems
+                val adapterPos = action.itemPosition
+                val questItem =
+                    agendaItems[adapterPos] as CreateAgendaItemsUseCase.AgendaItem.QuestItem
+                undoCompletedQuestUseCase.execute(questItem.quest.id)
+            }
+
             is LoadDataAction.All -> {
                 val agendaDate = state.dataState.today
                 val pair = findAllAgendaDates(agendaDate)
@@ -202,9 +190,11 @@ class AgendaSideEffect : SideEffect<AppState>, Injects<Module> {
                 listenForAgendaItems(start, end, dispatcher, agendaDate, true)
             }
             is CalendarAction.SwipeChangeDate -> {
-                val currentPos = state.calendarState.adapterPosition
+                val calendarState = state.stateFor(CalendarViewState::class.java)
+                val currentPos = calendarState.adapterPosition
                 val newPos = action.adapterPosition
-                val curDate = state.scheduleState.currentDate
+                val scheduleState = state.stateFor(ScheduleViewState::class.java)
+                val curDate = scheduleState.currentDate
                 val agendaDate = if (newPos < currentPos)
                     curDate.minusDays(1)
                 else

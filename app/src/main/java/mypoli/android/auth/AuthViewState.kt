@@ -33,10 +33,10 @@ sealed class AuthAction : Action {
 object AuthReducer : UIReducer<AppState, AuthViewState> {
     override val key = AuthViewState::class.java
 
-    override fun reduce(state: AppState, uiState: AuthViewState, action: Action) =
+    override fun reduce(state: AppState, subState: AuthViewState, action: Action) =
         when (action) {
             is AuthAction.LoadSignUp -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.SHOW_SIGN_UP,
                     isGuest = action.isGuest
                 )
@@ -54,11 +54,11 @@ object AuthReducer : UIReducer<AppState, AuthViewState> {
                         AuthViewState.StateType.GUEST_AUTH_STARTED
                 }
 
-                uiState.copy(type = type)
+                subState.copy(type = type)
             }
 
             is AuthAction.UsernameValidationFailed -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.USERNAME_VALIDATION_ERROR,
                     usernameValidationError = action.error
                 )
@@ -75,62 +75,62 @@ object AuthReducer : UIReducer<AppState, AuthViewState> {
                     AuthViewState.Provider.GUEST ->
                         throw IllegalArgumentException("Guest can't log in")
                 }
-                uiState.copy(
+                subState.copy(
                     type = type
                 )
             }
 
             AuthAction.PlayerCreated -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.PLAYER_CREATED
                 )
             }
 
             AuthAction.PlayerLoggedIn -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.PLAYER_LOGGED_IN
                 )
             }
 
             AuthAction.GuestPlayerLoggedIn -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.GUEST_PLAYER_LOGGED_IN
                 )
             }
 
             AuthAction.SwitchViewType -> {
-                val isLogin = !uiState.isLogin
+                val isLogin = !subState.isLogin
 
                 val type = if (isLogin)
                     AuthViewState.StateType.SHOW_LOGIN
                 else
                     AuthViewState.StateType.SHOW_SIGN_UP
 
-                uiState.copy(
+                subState.copy(
                     type = type,
                     isLogin = isLogin
                 )
             }
 
             AuthAction.AccountsLinked -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.ACCOUNTS_LINKED
                 )
             }
 
             AuthAction.DeleteAccount -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.DELETE_ACCOUNT
                 )
             }
 
             AuthAction.SignOutAccount -> {
-                uiState.copy(
+                subState.copy(
                     type = AuthViewState.StateType.SIGN_OUT_ACCOUNT
                 )
             }
 
-            else -> uiState
+            else -> subState
 
         }
 

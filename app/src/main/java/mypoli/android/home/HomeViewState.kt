@@ -12,9 +12,9 @@ import mypoli.android.common.redux.Action
 sealed class HomeAction : Action
 
 object HomeReducer : UIReducer<AppState, HomeViewState> {
-    override fun reduce(state: AppState, uiState: HomeViewState, action: Action): HomeViewState {
+    override fun reduce(state: AppState, subState: HomeViewState, action: Action): HomeViewState {
         val player = state.dataState.player
-        return uiState.copy(
+        return subState.copy(
             showSignIn = if (player != null) !player.isLoggedIn() else true
         )
     }

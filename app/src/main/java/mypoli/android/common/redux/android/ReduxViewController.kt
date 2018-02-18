@@ -53,16 +53,6 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : UIRedu
         addLifecycleListener(lifecycleListener)
     }
 
-//    override val transformer: StateStore.StateChangeSubscriber.StateTransformer<AppState, VS>
-//        get() = object : StateStore.StateChangeSubscriber.StateTransformer<AppState, VS> {
-//
-//            override fun transformInitial(state: AppState): VS =
-//                presenter.presentInitial(presenter.present(state, activity!!))
-//
-//            override fun transform(state: AppState): VS =
-//                presenter.present(state, activity!!)
-//        }
-
     fun dispatch(action: A) {
         stateStore.dispatch(action)
     }

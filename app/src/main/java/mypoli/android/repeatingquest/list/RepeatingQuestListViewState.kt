@@ -16,7 +16,7 @@ object RepeatingQuestListReducer : UIReducer<AppState, RepeatingQuestListViewSta
 
     override fun reduce(
         state: AppState,
-        uiState: RepeatingQuestListViewState,
+        subState: RepeatingQuestListViewState,
         action: Action
     ): RepeatingQuestListViewState {
         TODO("not implemented") //To change body of created functions use File | Settings | File Templates.

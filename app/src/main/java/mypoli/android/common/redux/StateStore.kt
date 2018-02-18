@@ -44,9 +44,12 @@ abstract class CombinedState<T>(
     protected abstract fun createWithData(stateData: Map<Class<*>, State>): T
 }
 
-interface Reducer<S : State> {
+interface Reducer<AS : CombinedState<AS>, S : State> {
 
-    fun reduce(state: S, action: Action): S
+    fun reduce(state: AS, action: Action) =
+        reduce(state, state.stateFor(key), action)
+
+    fun reduce(state: AS, subState: S, action: Action): S
 
     fun defaultState(): S
 
@@ -58,7 +61,7 @@ interface Dispatcher {
 }
 
 class StateStore<S : CombinedState<S>>(
-    private val reducers: List<Reducer<S>>,
+    private val reducers: List<Reducer<S, *>>,
     defaultState: S,
     middleware: List<MiddleWare<S>> = listOf()
 ) : Dispatcher {
@@ -103,7 +106,7 @@ class StateStore<S : CombinedState<S>>(
 
     class CombinedReducer<S : CombinedState<S>> {
 
-        fun reduce(state: S, action: Action, reducers: List<Reducer<S>>): S {
+        fun reduce(state: S, action: Action, reducers: List<Reducer<S, *>>): S {
             if (action is UIAction.Attach) {
                 val key = action.reducer.key
                 val s = action.reducer.defaultState()

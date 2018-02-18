@@ -55,19 +55,19 @@ object AgendaReducer : UIReducer<AppState, AgendaViewState> {
 
     override fun reduce(
         state: AppState,
-        uiState: AgendaViewState,
+        subState: AgendaViewState,
         action: Action
     ): AgendaViewState {
         return when (action) {
             is DataLoadedAction.AgendaItemsChanged -> {
                 val userScrolledToPosition =
-                    if (uiState.userScrollPosition != null) {
+                    if (subState.userScrollPosition != null) {
                         val userDate =
-                            uiState.agendaItems[uiState.userScrollPosition].startDate()
+                            subState.agendaItems[subState.userScrollPosition].startDate()
                         findItemPositionToScrollTo(userDate, action.agendaItems)
                     } else null
 
-                uiState.copy(
+                subState.copy(
                     type = AgendaState.StateType.DATA_CHANGED,
                     agendaItems = action.agendaItems,
                     scrollToPosition = findItemPositionToScrollTo(
@@ -79,24 +79,24 @@ object AgendaReducer : UIReducer<AppState, AgendaViewState> {
                 )
             }
             is AgendaAction.LoadBefore -> {
-                uiState.copy(
+                subState.copy(
                     type = AgendaState.StateType.SHOW_TOP_LOADER,
                     userScrollPosition = action.itemPosition
                 )
             }
             is AgendaAction.LoadAfter -> {
-                uiState.copy(
+                subState.copy(
                     type = AgendaState.StateType.SHOW_BOTTOM_LOADER,
                     userScrollPosition = action.itemPosition
                 )
             }
             is AgendaAction.FirstVisibleItemChanged -> {
-                uiState.copy(
+                subState.copy(
                     type = AgendaState.StateType.IDLE,
                     userScrollPosition = action.itemPosition
                 )
             }
-            else -> uiState
+            else -> subState
 
         }
     }

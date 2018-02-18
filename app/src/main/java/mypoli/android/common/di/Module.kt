@@ -493,14 +493,13 @@ class AndroidStateStoreModule : StateStoreModule, Injects<Module> {
     override val stateStore by required {
         StateStore<AppState>(
             listOf(AppDataReducer),
+            AppState(),
             listOf(
                 SagaMiddleware<AppState>(
                     sideEffects = listOf(
                         LoadAllDataSideEffect(),
                         AuthSideEffect(),
                         AgendaSideEffect(),
-                        CompleteQuestSideEffect(),
-                        UndoCompletedQuestSideEffect(),
                         BuyPredefinedChallengeSideEffect(),
                         ChangePetSideEffect(),
                         BuyPetSideEffect()

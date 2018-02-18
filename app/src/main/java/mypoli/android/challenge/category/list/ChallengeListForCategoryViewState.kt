@@ -33,13 +33,13 @@ object ChallengeListForCategoryReducer :
     UIReducer<AppState, ChallengeListForCategoryViewState> {
     override fun reduce(
         state: AppState,
-        uiState: ChallengeListForCategoryViewState,
+        subState: ChallengeListForCategoryViewState,
         action: Action
     ): ChallengeListForCategoryViewState {
 
         val player = state.dataState.player
 
-        val challengeListState = uiState.copy(
+        val challengeListState = subState.copy(
             playerGems = player?.gems ?: 0
         )
 

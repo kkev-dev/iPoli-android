@@ -31,10 +31,10 @@ object PetStoreReducer : UIReducer<AppState, PetStoreViewState> {
 
     override fun reduce(
         state: AppState,
-        uiState: PetStoreViewState,
+        subState: PetStoreViewState,
         action: Action
     ): PetStoreViewState {
-        val petStoreState = uiState.copy(
+        val petStoreState = subState.copy(
             playerGems = state.dataState.player?.gems ?: 0
         )
         return when (action) {
