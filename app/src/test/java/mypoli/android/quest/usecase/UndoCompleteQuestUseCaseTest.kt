@@ -16,6 +16,7 @@ import org.jetbrains.spek.api.Spek
 import org.jetbrains.spek.api.dsl.describe
 import org.jetbrains.spek.api.dsl.it
 import org.threeten.bp.LocalDate
+import org.threeten.bp.LocalDateTime
 
 /**
  * Created by Venelin Valkov <venelin@ipoli.io>
@@ -55,6 +56,8 @@ class UndoCompleteQuestUseCaseSpek : Spek({
 
                 on { findById(any()) } doReturn
                     quest
+
+                on { findNextReminderTime(any()) } doReturn LocalDateTime.now()
             }
 
             reminderScheduler = mock<ReminderScheduler>()

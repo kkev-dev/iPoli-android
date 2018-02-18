@@ -28,14 +28,14 @@ class AddTimerToQuestUseCaseSpek : Spek({
             quest: Quest,
             isPomodoro: Boolean,
             time: Instant = Instant.now(),
-            startedQuest: Quest? = null
+            startedQuests: List<Quest> = listOf()
         ): AddTimerToQuestUseCase.Result {
             val questRepoMock = mock<QuestRepository> {
                 on { findById(any()) } doReturn quest
                 on { save(any()) } doAnswer { invocation ->
                     invocation.getArgument(0)
                 }
-                on { findStartedQuests() } doReturn listOf(startedQuest!!)
+                on { findStartedQuests() } doReturn startedQuests
             }
             return AddTimerToQuestUseCase(questRepoMock, mock(), mock())
                 .execute(AddTimerToQuestUseCase.Params(quest.id, isPomodoro, time))
@@ -113,12 +113,14 @@ class AddTimerToQuestUseCaseSpek : Spek({
                 quest = quest,
                 isPomodoro = false,
                 time = now,
-                startedQuest = quest.copy(
-                    timeRanges = listOf(
-                        TimeRange(
-                            TimeRange.Type.COUNTDOWN,
-                            quest.duration,
-                            now
+                startedQuests = listOf(
+                    quest.copy(
+                        timeRanges = listOf(
+                            TimeRange(
+                                TimeRange.Type.COUNTDOWN,
+                                quest.duration,
+                                now
+                            )
                         )
                     )
                 )
@@ -132,12 +134,14 @@ class AddTimerToQuestUseCaseSpek : Spek({
                 quest = quest,
                 isPomodoro = true,
                 time = now,
-                startedQuest = quest.copy(
-                    timeRanges = listOf(
-                        TimeRange(
-                            TimeRange.Type.POMODORO_WORK,
-                            1.pomodoros(),
-                            now
+                startedQuests = listOf(
+                    quest.copy(
+                        timeRanges = listOf(
+                            TimeRange(
+                                TimeRange.Type.POMODORO_WORK,
+                                1.pomodoros(),
+                                now
+                            )
                         )
                     )
                 )
