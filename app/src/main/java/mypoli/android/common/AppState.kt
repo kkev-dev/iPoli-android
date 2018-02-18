@@ -1,7 +1,7 @@
 package mypoli.android.common
 
 import mypoli.android.common.redux.Action
-import mypoli.android.common.redux.CombinedState
+import mypoli.android.common.redux.CompositeState
 import mypoli.android.common.redux.State
 import mypoli.android.common.redux.ViewStateReducer
 
@@ -16,9 +16,9 @@ sealed class LoadDataAction : Action {
 }
 
 sealed class UIAction : Action {
-    data class Attach<S : CombinedState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
+    data class Attach<S : CompositeState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
 
-    data class Detach<S : CombinedState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
+    data class Detach<S : CompositeState<S>>(val reducer: ViewStateReducer<S, *>) : UIAction()
 }
 
 class AppState(
@@ -28,7 +28,7 @@ class AppState(
             AppDataReducer.defaultState()
         )
     )
-) : CombinedState<AppState>(data) {
+) : CompositeState<AppState>(data) {
 
     val dataState: AppDataState = stateFor(AppDataState::class.java)
 
