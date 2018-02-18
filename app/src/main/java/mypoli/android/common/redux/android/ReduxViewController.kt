@@ -23,10 +23,9 @@ import space.traversal.kapsule.required
  * Created by Venelin Valkov <venelin@mypoli.fun>
  * on 1/18/18.
  */
-abstract class ReduxViewController<in A : Action, VS : ViewState, out R : ViewStateReducer<AppState, VS>> protected constructor(
+abstract class ReduxViewController<A : Action, VS : ViewState, out R : ViewStateReducer<AppState, VS>> protected constructor(
     args: Bundle? = null
-) :
-    RestoreViewOnCreateController(args), Injects<Module>,
+) : RestoreViewOnCreateController(args), Injects<Module>,
     StateStore.StateChangeSubscriber<AppState> {
 
     private val stateStore by required { stateStore }
@@ -45,6 +44,9 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : ViewSt
             override fun postAttach(controller: Controller, view: View) {
                 stateStore.dispatch(UIAction.Attach(reducer))
                 stateStore.subscribe(this@ReduxViewController)
+                onCreateLoadAction()?.let {
+                    stateStore.dispatch(it)
+                }
             }
 
             override fun preDetach(controller: Controller, view: View) {
@@ -61,14 +63,18 @@ abstract class ReduxViewController<in A : Action, VS : ViewState, out R : ViewSt
     }
 
     override fun onStateChanged(newState: AppState) {
-        val subState = newState.stateFor(reducer.key)
-        if (subState != currentState) {
-            currentState = subState
+        val viewState = newState.stateFor(reducer.key)
+        if (viewState != currentState) {
+            currentState = viewState
 
             launch(UI) {
-                render(subState, view!!)
+                render(viewState, view!!)
             }
         }
+    }
+
+    protected open fun onCreateLoadAction(): A? {
+        return null
     }
 
     abstract fun render(state: VS, view: View)

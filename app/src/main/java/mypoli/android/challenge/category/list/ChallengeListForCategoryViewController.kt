@@ -67,6 +67,9 @@ class ChallengeListForCategoryViewController :
         return view
     }
 
+    override fun onCreateLoadAction() =
+        ChallengeListForCategoryAction.LoadData(challengeCategory)
+
     private fun showCurrencyConverter() {
         CurrencyConverterDialogController().showDialog(router, "currency-converter")
     }
@@ -82,11 +85,6 @@ class ChallengeListForCategoryViewController :
     override fun onAttach(view: View) {
         showBackButton()
         super.onAttach(view)
-        dispatch(
-            ChallengeListForCategoryAction.LoadData(
-                challengeCategory
-            )
-        )
     }
 
     override fun render(state: ChallengeListForCategoryViewState, view: View) {
