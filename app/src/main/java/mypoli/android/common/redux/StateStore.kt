@@ -93,7 +93,7 @@ class StateStore<S : CompositeState<S>>(
     reducers: Set<Reducer<S, *>>,
     private val sideEffects: Set<SideEffect<S>> = setOf(),
     private val sideEffectExecutor: SideEffectExecutor<S>,
-    middleware: List<MiddleWare<S>> = listOf()
+    middleware: Set<MiddleWare<S>> = setOf()
 ) : Dispatcher {
 
     interface StateChangeSubscriber<in S> {
@@ -158,6 +158,7 @@ class StateStore<S : CompositeState<S>>(
             if (action is UIAction.Detach<*>) {
                 val stateKey = action.reducer.stateKey
                 require(stateToReducer.contains(stateKey))
+                require(state.keys.contains(stateKey))
                 return state.remove(stateKey)
             }
 

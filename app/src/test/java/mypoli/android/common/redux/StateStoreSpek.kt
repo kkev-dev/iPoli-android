@@ -67,17 +67,16 @@ object StateStoreSpek : Spek({
         }
 
         fun createStore(
-            middleware: List<MiddleWare<TestState>> = listOf(),
+            middleware: Set<MiddleWare<TestState>> = setOf(),
             sideEffects: Set<SideEffect<TestState>> = setOf()
-        ): StateStore<TestState> {
-            return StateStore<TestState>(
+        ) =
+            StateStore(
                 TestState(mapOf(SubState::class.java to SubState())),
                 setOf(testReducer),
                 sideEffects = sideEffects,
                 sideEffectExecutor = TestSideEffectExecutor(),
                 middleware = middleware
             )
-        }
 
         it("should call the reducer with no middleware") {
             createStore().dispatch(TestAction())
@@ -85,7 +84,7 @@ object StateStoreSpek : Spek({
         }
 
         it("should not call reducer with stopping middleware") {
-            createStore(listOf(StopMiddleware())).dispatch(TestAction())
+            createStore(setOf(StopMiddleware())).dispatch(TestAction())
 
             executeCount.`should be equal to`(0)
         }

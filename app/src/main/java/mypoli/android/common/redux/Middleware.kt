@@ -26,7 +26,7 @@ interface SimpleMiddleware<in S : State> : MiddleWare<S> {
     fun onExecute(state: S, dispatcher: Dispatcher, action: Action)
 }
 
-class CompositeMiddleware<in S : State>(private val middleware: List<MiddleWare<S>>) :
+class CompositeMiddleware<in S : State>(private val middleware: Set<MiddleWare<S>>) :
     MiddleWare<S> {
 
     override fun execute(state: S, dispatcher: Dispatcher, action: Action): MiddleWare.Result {

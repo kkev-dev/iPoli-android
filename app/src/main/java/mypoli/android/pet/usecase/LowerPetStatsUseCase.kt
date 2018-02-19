@@ -28,6 +28,10 @@ class LowerPetStatsUseCase(
         requireNotNull(p)
         player = p!!
 
+        if (player.pet.isDead) {
+            return player.pet
+        }
+
         if (parameters == Constants.CHANGE_PET_STATS_MORNING_TIME) {
 
             val healthPenalty = MORNING_HEALTH_POINTS_PENALTIES[Random(randomSeed).nextInt(

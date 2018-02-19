@@ -54,7 +54,7 @@ abstract class AppSideEffect : SideEffect<AppState>,
     )
 
     fun dispatch(action: Action) {
-        dispatcher?.dispatch(action)
+        dispatcher!!.dispatch(action)
     }
 }
 
