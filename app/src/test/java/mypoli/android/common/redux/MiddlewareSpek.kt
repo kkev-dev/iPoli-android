@@ -56,7 +56,7 @@ object MiddlewareSpek : Spek({
         it("should call all middleware") {
 
             val m = CompositeMiddleware(
-                listOf(
+                setOf(
                     CountExecutionsMiddleware(),
                     CountExecutionsMiddleware()
                 )
@@ -69,7 +69,7 @@ object MiddlewareSpek : Spek({
         it("should stop after first middleware") {
 
             val m = CompositeMiddleware(
-                listOf(
+                setOf(
                     CountExecutionsMiddleware(),
                     StopMiddleware()
                 )
@@ -82,7 +82,7 @@ object MiddlewareSpek : Spek({
         it("should stop at first middleware") {
 
             val m = CompositeMiddleware(
-                listOf(
+                setOf(
                     StopMiddleware(),
                     CountExecutionsMiddleware()
                 )
